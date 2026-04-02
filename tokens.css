@@ -72,11 +72,20 @@
   --radius-2xl: 64px;
 
   /* ---- TYPOGRAPHY ---- */
-  --font-family:          'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family:          'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-weight-regular:  400;
   --font-weight-semibold: 600;
   --font-weight-bold:     700;
 
+  --font-size-h1:   1.125rem;  /* 18px */
+  --font-size-h2:   1rem;      /* 16px */
+  --font-size-h3:   0.9375rem; /* 15px */
+  --font-size-h4:   0.875rem;  /* 14px */
+  --font-size-body1: 0.9375rem; /* 15px */
+  --font-size-body2: 0.875rem;  /* 14px */
+  --font-size-body3: 0.75rem;   /* 12px */
+
+  /* legacy scale — kept for component references */
   --font-size-xs:      0.625rem;   /* 10px */
   --font-size-sm:      0.75rem;    /* 12px */
   --font-size-body-sm: 0.875rem;   /* 14px */
@@ -86,8 +95,6 @@
   --font-size-xl:      1.5rem;     /* 24px */
   --font-size-2xl:     2.125rem;   /* 34px */
   --font-size-3xl:     3rem;       /* 48px */
-  --font-size-4xl:     3.75rem;    /* 60px */
-  --font-size-5xl:     6rem;       /* 96px */
 
   /* ---- BREAKPOINTS (reference only — use in media queries) ---- */
   --bp-sm: 600px;
@@ -168,14 +175,15 @@
   --input-disabled:      #979797;
   --input-icon:          #979797;
 
-  /* Chips / Status */
-  --chip-complete-bg:    #C8E6C9;
-  --chip-complete-text:  #1B5E20;
-  --chip-progress-bg:    #FFF9C4;
-  --chip-progress-text:  #F57F17;
-  --chip-error-bg:       #FFCDD2;
-  --chip-error-text:     #B71C1C;
-  --chip-neutral-bg:     #D9D9D9;
+  /* Chips / Status — light mode (Figma: color=X light variants) */
+  --chip-complete-bg:    #81C784;  /* green 300 */
+  --chip-complete-text:  #000000;
+  --chip-progress-bg:    #FFF176;  /* yellow 300 */
+  --chip-progress-text:  #000000;
+  --chip-progress-r:     64px;
+  --chip-error-bg:       #E57373;  /* red 300 */
+  --chip-error-text:     #000000;
+  --chip-neutral-bg:     #D9D9D9;  /* grey 300 */
   --chip-neutral-text:   #000000;
 
   /* Button accent */
@@ -291,14 +299,15 @@
   --input-disabled:       #979797;
   --input-icon:           #979797;
 
-  /* Chips */
-  --chip-complete-bg:   #1B5E20;
-  --chip-complete-text: #81C784;
-  --chip-progress-bg:   #FBC02D;
+  /* Chips / Status — dark mode (Figma: color=X dark variants) */
+  --chip-complete-bg:   #1B5E20;  /* green 900 */
+  --chip-complete-text: #FFFFFF;
+  --chip-progress-bg:   #FBC02D;  /* yellow 700 */
   --chip-progress-text: #000000;
-  --chip-error-bg:      #B71C1C;
-  --chip-error-text:    #E57373;
-  --chip-neutral-bg:    #424242;
+  --chip-progress-r:    32px;
+  --chip-error-bg:      #B71C1C;  /* red 900 */
+  --chip-error-text:    #FFFFFF;
+  --chip-neutral-bg:    #424242;  /* grey 600 */
   --chip-neutral-text:  #FFFFFF;
 
   /* Button */

@@ -1,0 +1,353 @@
+/* ============================================================
+   DRAFTENGINE DESIGN SYSTEM — TOKENS
+   Collection: 1. Primitives + 2. Tokens (Light / Dark)
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. PRIMITIVES
+   ------------------------------------------------------------ */
+:root {
+  /* Orange */
+  --color-orange-100:    #FFE0B2;
+  --color-orange-300:    #FFB74D;
+  --color-orange-900:    #4E3418;
+  --color-orange-gemini: #DA8427;
+  --color-orange-grad:   #D34A00;
+
+  /* Blue */
+  --color-blue-50:    #E3F2FD;
+  --color-blue-100:   #B3E5FC;
+  --color-blue-600:   #00408F;
+  --color-blue-gemini:#0071FF;
+
+  /* Greyscale */
+  --color-grey-0:    #FFFFFF;
+  --color-grey-50:   #F5F5F5;
+  --color-grey-100:  #F1F1F1;
+  --color-grey-200:  #E9E9E9;
+  --color-grey-300:  #D9D9D9;
+  --color-grey-400:  #A1A1A1;
+  --color-grey-500:  #979797;
+  --color-grey-600:  #424242;
+  --color-grey-700:  #363636;
+  --color-grey-800:  #212121;
+  --color-grey-900:  #121212;
+  --color-grey-1000: #000000;
+
+  /* Green */
+  --color-green-100: #C8E6C9;
+  --color-green-300: #81C784;
+  --color-green-900: #1B5E20;
+
+  /* Yellow */
+  --color-yellow-100: #FFF9C4;
+  --color-yellow-300: #FFF176;
+  --color-yellow-700: #FBC02D;
+  --color-yellow-900: #F57F17;
+
+  /* Red */
+  --color-red-100: #FFCDD2;
+  --color-red-300: #E57373;
+  --color-red-500: #F44336;
+  --color-red-900: #B71C1C;
+
+  /* ---- SPACING (8px base) ---- */
+  --space-half: 4px;
+  --space-1:    8px;
+  --space-2:    16px;
+  --space-3:    24px;
+  --space-4:    32px;
+  --space-5:    40px;
+  --space-6:    48px;
+  --space-7:    56px;
+  --space-8:    64px;
+  --space-9:    72px;
+  --space-10:   80px;
+
+  /* ---- BORDER RADIUS ---- */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  16px;
+  --radius-xl:  32px;
+  --radius-2xl: 64px;
+
+  /* ---- TYPOGRAPHY ---- */
+  --font-family:          'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-weight-regular:  400;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --font-size-xs:      0.625rem;   /* 10px */
+  --font-size-sm:      0.75rem;    /* 12px */
+  --font-size-body-sm: 0.875rem;   /* 14px */
+  --font-size-body:    0.9375rem;  /* 15px */
+  --font-size-base:    1rem;       /* 16px */
+  --font-size-lg:      1.25rem;    /* 20px */
+  --font-size-xl:      1.5rem;     /* 24px */
+  --font-size-2xl:     2.125rem;   /* 34px */
+  --font-size-3xl:     3rem;       /* 48px */
+  --font-size-4xl:     3.75rem;    /* 60px */
+  --font-size-5xl:     6rem;       /* 96px */
+
+  /* ---- BREAKPOINTS (reference only — use in media queries) ---- */
+  --bp-sm: 600px;
+  --bp-md: 900px;
+  --bp-lg: 1200px;
+
+  /* ---- SHADOWS ---- */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.08);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.12);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.18);
+
+  /* ---- TRANSITIONS ---- */
+  --transition-fast:   150ms ease;
+  --transition-base:   200ms ease;
+  --transition-slow:   300ms ease;
+}
+
+/* ------------------------------------------------------------
+   2. TOKENS — LIGHT MODE (default)
+   ------------------------------------------------------------ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Text */
+  --text-primary:    #121212;
+  --text-secondary:  #363636;
+  --text-accent:     #DA8427;
+  --text-warning:    #F44336;
+  --text-action:     #0071FF;
+  --text-disabled:   #979797;
+
+  /* Background layers */
+  --bg-primary:      #FFFFFF;
+  --bg-secondary:    #FFFFFF;
+  --bg-tertiary:     #F1F1F1;
+  --bg-quaternary:   #FFFFFF;
+  --bg-form:         #979797;
+  --bg-page:         #F1F1F1;
+
+  /* Appbar */
+  --appbar-gradient:        linear-gradient(90deg, #DA8427 0%, #D34A00 100%);
+  --appbar-text:            #FFFFFF;
+  --appbar-text-selected:   #DA8427;
+  --appbar-bg-selected:     #F1F1F1;
+  --appbar-bg-hovered:      #E9E9E9;
+  --appbar-icon:            #FFFFFF;
+
+  /* Sidebar / Index */
+  --index-bg:             #FFFFFF;
+  --index-bg-hovered:     #FFE0B2;
+  --index-bg-selected:    #DA8427;
+  --index-text:           #979797;
+  --index-text-selected:  #FFFFFF;
+  --index-icon-selected:  #FFFFFF;
+
+  /* Datagrid / Table */
+  --grid-header-bg:       #D9D9D9;
+  --grid-header-text:     #000000;
+  --grid-body-text:       #000000;
+  --grid-disabled-text:   #979797;
+  --grid-hover-bg:        #E9E9E9;
+  --grid-selected-bg:     #FFE0B2;
+
+  /* Dividers */
+  --divider:     #D9D9D9;
+  --divider-alt: #979797;
+
+  /* Input / TextField / Select */
+  --input-text:          #000000;
+  --input-text-secondary:#424242;
+  --input-bg:            #E9E9E9;
+  --input-bg-hover:      #D9D9D9;
+  --input-border-hover:  #212121;
+  --input-focused:       #DA8427;
+  --input-focused-bg:    #FFE0B2;
+  --input-error:         #F44336;
+  --input-disabled:      #979797;
+  --input-icon:          #979797;
+
+  /* Chips / Status */
+  --chip-complete-bg:    #C8E6C9;
+  --chip-complete-text:  #1B5E20;
+  --chip-progress-bg:    #FFF9C4;
+  --chip-progress-text:  #F57F17;
+  --chip-error-bg:       #FFCDD2;
+  --chip-error-text:     #B71C1C;
+  --chip-neutral-bg:     #D9D9D9;
+  --chip-neutral-text:   #000000;
+
+  /* Button accent */
+  --btn-accent-bg:       #DA8427;
+  --btn-accent-text:     #FFFFFF;
+  --btn-accent-hover:    rgba(218, 132, 39, 0.08);
+  --btn-action-bg:       #0071FF;
+  --btn-action-text:     #FFFFFF;
+  --btn-action-dark-bg:  #00408F;
+
+  /* Menu */
+  --menu-bg:          #E9E9E9;
+  --menu-bg-hover:    #FFE0B2;
+  --menu-text:        #000000;
+  --menu-text-sub:    #424242;
+  --menu-focused:     #DA8427;
+  --menu-disabled:    #979797;
+
+  /* Tooltip */
+  --tooltip-bg:   #424242;
+  --tooltip-text: #FFFFFF;
+
+  /* Snackbar */
+  --snack-success-text: #1B5E20;
+  --snack-success-bg:   #C8E6C9;
+  --snack-warning-text: #DA8427;
+  --snack-warning-bg:   #FFF9C4;
+  --snack-error-text:   #B71C1C;
+  --snack-error-bg:     #FFCDD2;
+  --snack-info-text:    #0071FF;
+  --snack-info-bg:      #B3E5FC;
+
+  /* Droppad */
+  --droppad-bg:     #E3F2FD;
+  --droppad-border: #0071FF;
+
+  /* Charts */
+  --chart-success:    #81C784;
+  --chart-progress:   #FFB74D;
+  --chart-error:      #E57373;
+  --chart-neutral:    #D9D9D9;
+  --chart-default-bg: #FFFFFF;
+  --chart-hover-bg:   #F1F1F1;
+
+  /* Resize handle */
+  --resize-bg: rgba(192, 192, 192, 0.5);
+
+  /* Card */
+  --card-bg:     #FFFFFF;
+  --card-border: #E9E9E9;
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ------------------------------------------------------------
+   3. TOKENS — DARK MODE
+   ------------------------------------------------------------ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Text */
+  --text-primary:    #FFFFFF;
+  --text-secondary:  #A1A1A1;
+  --text-accent:     #DA8427;
+  --text-warning:    #F44336;
+  --text-action:     #0071FF;
+  --text-disabled:   #979797;
+
+  /* Background layers */
+  --bg-primary:    #121212;
+  --bg-secondary:  #212121;
+  --bg-tertiary:   #363636;
+  --bg-quaternary: #424242;
+  --bg-form:       #979797;
+  --bg-page:       #121212;
+
+  /* Appbar — same gradient both modes */
+  --appbar-gradient:       linear-gradient(90deg, #DA8427 0%, #D34A00 100%);
+  --appbar-text:           #000000;
+  --appbar-text-selected:  #DA8427;
+  --appbar-bg-selected:    #212121;
+  --appbar-bg-hovered:     #424242;
+  --appbar-icon:           #000000;
+
+  /* Sidebar / Index */
+  --index-bg:            #121212;
+  --index-bg-hovered:    #363636;
+  --index-bg-selected:   #212121;
+  --index-text:          #979797;
+  --index-text-selected: #DA8427;
+  --index-icon-selected: #DA8427;
+
+  /* Datagrid */
+  --grid-header-bg:      #363636;
+  --grid-header-text:    #FFFFFF;
+  --grid-body-text:      #FFFFFF;
+  --grid-disabled-text:  #979797;
+  --grid-hover-bg:       #212121;
+  --grid-selected-bg:    #4E3418;
+
+  /* Dividers */
+  --divider:     #363636;
+  --divider-alt: #979797;
+
+  /* Input */
+  --input-text:           #FFFFFF;
+  --input-text-secondary: #A1A1A1;
+  --input-bg:             #212121;
+  --input-bg-hover:       rgba(33, 33, 33, 0.6);
+  --input-border-hover:   #D9D9D9;
+  --input-focused:        #DA8427;
+  --input-focused-bg:     #4E3418;
+  --input-error:          #F44336;
+  --input-disabled:       #979797;
+  --input-icon:           #979797;
+
+  /* Chips */
+  --chip-complete-bg:   #1B5E20;
+  --chip-complete-text: #81C784;
+  --chip-progress-bg:   #FBC02D;
+  --chip-progress-text: #000000;
+  --chip-error-bg:      #B71C1C;
+  --chip-error-text:    #E57373;
+  --chip-neutral-bg:    #424242;
+  --chip-neutral-text:  #FFFFFF;
+
+  /* Button */
+  --btn-accent-bg:      #DA8427;
+  --btn-accent-text:    #FFFFFF;
+  --btn-accent-hover:   rgba(218, 132, 39, 0.08);
+  --btn-action-bg:      #0071FF;
+  --btn-action-text:    #FFFFFF;
+  --btn-action-dark-bg: #00408F;
+
+  /* Menu */
+  --menu-bg:        #212121;
+  --menu-bg-hover:  #FFE0B2;
+  --menu-text:      #FFFFFF;
+  --menu-text-sub:  #A1A1A1;
+  --menu-focused:   #DA8427;
+  --menu-disabled:  #979797;
+
+  /* Tooltip */
+  --tooltip-bg:   #424242;
+  --tooltip-text: #FFFFFF;
+
+  /* Snackbar */
+  --snack-success-text: #1B5E20;
+  --snack-success-bg:   #C8E6C9;
+  --snack-warning-text: #DA8427;
+  --snack-warning-bg:   #FFF9C4;
+  --snack-error-text:   #B71C1C;
+  --snack-error-bg:     #FFCDD2;
+  --snack-info-text:    #0071FF;
+  --snack-info-bg:      #B3E5FC;
+
+  /* Droppad */
+  --droppad-bg:     transparent;
+  --droppad-border: #0071FF;
+
+  /* Charts */
+  --chart-success:    #81C784;
+  --chart-progress:   #FFB74D;
+  --chart-error:      #E57373;
+  --chart-neutral:    #424242;
+  --chart-default-bg: #212121;
+  --chart-hover-bg:   rgba(33,33,33,0.6);
+
+  /* Resize handle */
+  --resize-bg: rgba(192, 192, 192, 0.5);
+
+  /* Card */
+  --card-bg:     #212121;
+  --card-border: #363636;
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}

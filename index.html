@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DraftEngine Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./components.css" />
+  <style>
+    /* Showcase-only styles */
+    .showcase { max-width: 1100px; margin: 0 auto; padding: var(--space-5) var(--space-3); }
+    .section   { margin-bottom: var(--space-8); }
+    .section-title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+      padding-bottom: var(--space-1);
+      border-bottom: 2px solid var(--btn-accent-bg);
+      display: inline-block;
+    }
+    .section-desc {
+      font-size: var(--font-size-body-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+    .subsection-title {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-1);
+      margin-top: var(--space-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: var(--font-size-xs);
+    }
+    .row  { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-start; }
+    .col  { display: flex; flex-direction: column; gap: var(--space-1); }
+    .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--space-2); }
+    .swatch {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--divider);
+    }
+    .swatch__color { height: 64px; }
+    .swatch__label {
+      padding: 6px 8px;
+      background: var(--bg-primary);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      font-weight: var(--font-weight-semibold);
+    }
+    .swatch__hex {
+      padding: 0 8px 6px;
+      background: var(--bg-primary);
+      font-size: var(--font-size-xs);
+      color: var(--text-disabled);
+      font-family: monospace;
+    }
+    .type-row {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-3);
+      padding: var(--space-1) 0;
+      border-bottom: 1px solid var(--divider);
+    }
+    .type-meta {
+      min-width: 130px;
+      font-size: var(--font-size-xs);
+      color: var(--text-disabled);
+      font-family: monospace;
+    }
+    .space-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 6px 0;
+    }
+    .space-bar {
+      background: var(--btn-accent-bg);
+      height: 20px;
+      border-radius: var(--radius-sm);
+      opacity: 0.7;
+    }
+    .space-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      font-family: monospace;
+      min-width: 120px;
+    }
+    /* Sidebar demo container */
+    .sidebar-demo {
+      display: flex;
+      height: 340px;
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .sidebar-demo__content {
+      flex: 1;
+      padding: var(--space-2);
+      background: var(--bg-page);
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Theme toggle in top bar */
+    .showcase-header {
+      background: var(--appbar-gradient);
+      padding: var(--space-2) var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .showcase-header__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-xl);
+      color: #fff;
+    }
+    .showcase-header__right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .showcase-header__badge {
+      font-size: var(--font-size-sm);
+      color: rgba(255,255,255,0.8);
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: var(--radius-xl);
+      padding: 4px var(--space-1);
+      cursor: pointer;
+      color: #fff;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      font-family: var(--font-family);
+      transition: background var(--transition-fast);
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.25); }
+    .appbar-demo {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--divider);
+    }
+    .component-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="showcase-header">
+  <div class="showcase-header__brand">
+    <!-- Gemini Logo SVG -->
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 3 L24 22 H4 Z" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M10 22 Q14 14 18 22" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    DraftEngine
+  </div>
+  <div class="showcase-header__right">
+    <span class="showcase-header__badge">Design System v1.0</span>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <span id="theme-label">Light</span>
+    </button>
+  </div>
+</header>
+
+<div class="showcase">
+
+  <!-- ============================================================
+       COLORS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Colors</h2>
+    <p class="section-desc">Primitive palette — referenced by semantic tokens in Light and Dark modes.</p>
+
+    <div class="subsection-title">Orange / Brand</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#DA8427"></div><div class="swatch__label">Gemini Orange</div><div class="swatch__hex">#DA8427</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#D34A00"></div><div class="swatch__label">Gradient End</div><div class="swatch__hex">#D34A00</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFE0B2"></div><div class="swatch__label">Orange 100</div><div class="swatch__hex">#FFE0B2</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFB74D"></div><div class="swatch__label">Orange 300</div><div class="swatch__hex">#FFB74D</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#4E3418"></div><div class="swatch__label">Orange 900</div><div class="swatch__hex">#4E3418</div></div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Blue / Action</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#0071FF"></div><div class="swatch__label">Gemini Blue</div><div class="swatch__hex">#0071FF</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#00408F"></div><div class="swatch__label">Blue 600</div><div class="swatch__hex">#00408F</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#B3E5FC"></div><div class="swatch__label">Blue 100</div><div class="swatch__hex">#B3E5FC</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#E3F2FD"></div><div class="swatch__label">Blue 50</div><div class="swatch__hex">#E3F2FD</div></div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Greyscale</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#FFFFFF; border:1px solid #eee"></div><div class="swatch__label">Grey 0</div><div class="swatch__hex">#FFFFFF</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#F1F1F1"></div><div class="swatch__label">Grey 100</div><div class="swatch__hex">#F1F1F1</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#E9E9E9"></div><div class="swatch__label">Grey 200</div><div class="swatch__hex">#E9E9E9</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#D9D9D9"></div><div class="swatch__label">Grey 300</div><div class="swatch__hex">#D9D9D9</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#A1A1A1"></div><div class="swatch__label">Grey 400</div><div class="swatch__hex">#A1A1A1</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#979797"></div><div class="swatch__label">Grey 500</div><div class="swatch__hex">#979797</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#424242"></div><div class="swatch__label">Grey 600</div><div class="swatch__hex">#424242</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#363636"></div><div class="swatch__label">Grey 700</div><div class="swatch__hex">#363636</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#212121"></div><div class="swatch__label">Grey 800</div><div class="swatch__hex">#212121</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#121212"></div><div class="swatch__label">Grey 900</div><div class="swatch__hex">#121212</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#000000"></div><div class="swatch__label">Grey 1000</div><div class="swatch__hex">#000000</div></div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Semantic — Status</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#81C784"></div><div class="swatch__label">Complete</div><div class="swatch__hex">#81C784</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#C8E6C9"></div><div class="swatch__label">Complete Bg</div><div class="swatch__hex">#C8E6C9</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFF176"></div><div class="swatch__label">In Progress</div><div class="swatch__hex">#FFF176</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFF9C4"></div><div class="swatch__label">Progress Bg</div><div class="swatch__hex">#FFF9C4</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#E57373"></div><div class="swatch__label">Error</div><div class="swatch__hex">#E57373</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFCDD2"></div><div class="swatch__label">Error Bg</div><div class="swatch__hex">#FFCDD2</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#F44336"></div><div class="swatch__label">Warning</div><div class="swatch__hex">#F44336</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#D9D9D9"></div><div class="swatch__label">Neutral</div><div class="swatch__hex">#D9D9D9</div></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TYPOGRAPHY
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Typography</h2>
+    <p class="section-desc">Inter font family. Base size 16px. Scale derived from Material UI for Gemini Legal.</p>
+    <div class="component-card">
+      <div class="type-row">
+        <div class="type-meta">3xl · 48px · Bold</div>
+        <div class="de-h1">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">2xl · 34px · Bold</div>
+        <div class="de-h2">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">xl · 24px · SemiBold</div>
+        <div class="de-h3">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">lg · 20px · SemiBold</div>
+        <div class="de-h4">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">base · 16px · SemiBold</div>
+        <div class="de-h5">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">body-sm · 14px · SemiBold</div>
+        <div class="de-h6">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">body · 16px · Regular</div>
+        <div class="de-body">The quick brown fox jumps over the lazy dog. Legal document editing platform for attorneys.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">body-sm · 14px</div>
+        <div class="de-body-sm">The quick brown fox jumps over the lazy dog. Legal document editing platform for attorneys.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">caption · 12px</div>
+        <div class="de-caption">The quick brown fox jumps over the lazy dog.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">overline · 10px</div>
+        <div class="de-overline">Section Label</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SPACING
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Spacing</h2>
+    <p class="section-desc">8px base unit. All spacing multiplied by 8 (plus 4px half unit).</p>
+    <div class="component-card">
+      <div class="space-row"><div class="space-label">half — 4px</div><div class="space-bar" style="width:4px"></div></div>
+      <div class="space-row"><div class="space-label">space-1 — 8px</div><div class="space-bar" style="width:8px"></div></div>
+      <div class="space-row"><div class="space-label">space-2 — 16px</div><div class="space-bar" style="width:16px"></div></div>
+      <div class="space-row"><div class="space-label">space-3 — 24px</div><div class="space-bar" style="width:24px"></div></div>
+      <div class="space-row"><div class="space-label">space-4 — 32px</div><div class="space-bar" style="width:32px"></div></div>
+      <div class="space-row"><div class="space-label">space-5 — 40px</div><div class="space-bar" style="width:40px"></div></div>
+      <div class="space-row"><div class="space-label">space-6 — 48px</div><div class="space-bar" style="width:48px"></div></div>
+      <div class="space-row"><div class="space-label">space-7 — 56px</div><div class="space-bar" style="width:56px"></div></div>
+      <div class="space-row"><div class="space-label">space-8 — 64px</div><div class="space-bar" style="width:64px"></div></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       APPBAR
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Appbar</h2>
+    <p class="section-desc">Top navigation bar. Gradient: <code>#DA8427 → #D34A00</code>. Sticky, 56px height.</p>
+    <div class="appbar-demo">
+      <nav class="de-appbar">
+        <a href="#" class="de-appbar__logo">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none"><path d="M14 3 L24 22 H4 Z" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round"/><path d="M10 22 Q14 14 18 22" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          DraftEngine
+        </a>
+        <div class="de-appbar__nav">
+          <a href="#" class="de-appbar__nav-item">Dashboard</a>
+          <a href="#" class="de-appbar__nav-item is-active">Forms</a>
+          <a href="#" class="de-appbar__nav-item">Matters</a>
+          <a href="#" class="de-appbar__nav-item">Settings</a>
+        </div>
+        <div class="de-appbar__actions">
+          <span class="de-appbar-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            J. Smith
+          </span>
+        </div>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Sidebar / Index</h2>
+    <p class="section-desc">Left navigation panel. Selected state uses accent orange. Hover uses orange-100 tint.</p>
+    <div class="sidebar-demo">
+      <nav class="de-sidebar">
+        <div class="de-sidebar__item">
+          <svg class="de-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="de-sidebar__item is-active">
+          <svg class="de-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Forms
+        </div>
+        <div class="de-sidebar__item">
+          <svg class="de-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Matters
+        </div>
+        <div class="de-sidebar__divider"></div>
+        <div class="de-sidebar__section-label">Settings</div>
+        <div class="de-sidebar__item">
+          <svg class="de-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          Contacts
+        </div>
+        <div class="de-sidebar__item">
+          <svg class="de-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Admin
+        </div>
+      </nav>
+      <div class="sidebar-demo__content">← Select a sidebar item</div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BUTTONS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Buttons</h2>
+    <p class="section-desc">6 variants × 3 sizes. Built on semantic token layer.</p>
+    <div class="component-card">
+      <div class="subsection-title">Variants</div>
+      <div class="row" style="margin-bottom:var(--space-2)">
+        <button class="de-btn de-btn--accent">Accent</button>
+        <button class="de-btn de-btn--action">Action</button>
+        <button class="de-btn de-btn--outlined">Outlined</button>
+        <button class="de-btn de-btn--outlined-action">Outlined Action</button>
+        <button class="de-btn de-btn--ghost">Ghost</button>
+        <button class="de-btn de-btn--contrast">Contrast</button>
+        <button class="de-btn de-btn--neutral">Neutral</button>
+        <button class="de-btn de-btn--accent" disabled>Disabled</button>
+      </div>
+      <div class="subsection-title">Sizes</div>
+      <div class="row" style="align-items:center">
+        <button class="de-btn de-btn--accent de-btn--sm">Small</button>
+        <button class="de-btn de-btn--accent">Default</button>
+        <button class="de-btn de-btn--accent de-btn--lg">Large</button>
+      </div>
+      <div class="subsection-title" style="margin-top:var(--space-2)">With Icons</div>
+      <div class="row">
+        <button class="de-btn de-btn--accent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Form
+        </button>
+        <button class="de-btn de-btn--outlined">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import
+        </button>
+        <button class="de-btn de-btn--icon de-btn--neutral">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CHIPS / STATUS BADGES
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Chips &amp; Status</h2>
+    <p class="section-desc">Status indicators for forms and matters. Colors shift in dark mode.</p>
+    <div class="component-card">
+      <div class="subsection-title">Status Chips</div>
+      <div class="row">
+        <span class="de-chip de-chip--complete"><span class="de-chip__dot"></span>Complete</span>
+        <span class="de-chip de-chip--progress"><span class="de-chip__dot"></span>In Progress</span>
+        <span class="de-chip de-chip--error"><span class="de-chip__dot"></span>Error</span>
+        <span class="de-chip de-chip--neutral"><span class="de-chip__dot"></span>Neutral</span>
+        <span class="de-chip de-chip--accent"><span class="de-chip__dot"></span>Accent</span>
+      </div>
+      <div class="subsection-title" style="margin-top:var(--space-2)">Chip Dropdown</div>
+      <div class="row">
+        <button class="de-chip-dropdown de-chip--complete">
+          Complete
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="de-chip-dropdown de-chip--progress">
+          In Progress
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="de-chip-dropdown de-chip--error">
+          Filed
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       INPUTS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Inputs</h2>
+    <p class="section-desc">Text fields, selects, textarea. Focus state uses geminiOrange border + tinted background.</p>
+    <div class="component-card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+        <div class="de-input-wrap">
+          <label class="de-label">Matter Name</label>
+          <input class="de-input" type="text" placeholder="Enter matter name..." />
+        </div>
+        <div class="de-input-wrap">
+          <label class="de-label">Search</label>
+          <div class="de-input-icon-wrap">
+            <svg class="de-input__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="de-input" type="text" placeholder="Search forms..." />
+          </div>
+        </div>
+        <div class="de-input-wrap">
+          <label class="de-label">Court</label>
+          <select class="de-input de-select">
+            <option>Select court...</option>
+            <option>Superior Court</option>
+            <option>Federal District Court</option>
+            <option>Court of Appeals</option>
+          </select>
+        </div>
+        <div class="de-input-wrap">
+          <label class="de-label">Error State</label>
+          <input class="de-input de-input--error" type="text" value="Invalid value" />
+          <span class="de-helper-text de-helper-text--error">This field is required</span>
+        </div>
+        <div class="de-input-wrap">
+          <label class="de-label">Disabled</label>
+          <input class="de-input" type="text" placeholder="Disabled field" disabled />
+        </div>
+        <div class="de-input-wrap">
+          <label class="de-label">Notes</label>
+          <textarea class="de-input de-textarea" placeholder="Add notes..."></textarea>
+        </div>
+      </div>
+      <div class="subsection-title" style="margin-top:var(--space-3)">Multi Select</div>
+      <div class="de-multi-select">
+        <div class="de-multi-select__input-wrap">
+          <span class="de-multi-select__tag">
+            Los Angeles
+            <svg class="de-multi-select__tag-remove" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
+          <span class="de-multi-select__tag">
+            San Francisco
+            <svg class="de-multi-select__tag-remove" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
+          <input class="de-multi-select__ghost-input" placeholder="Add courts..." />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CARD
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Card</h2>
+    <p class="section-desc">Base container with header, body, and footer slots.</p>
+    <div class="row">
+      <div class="de-card" style="width:320px">
+        <div class="de-card__header">
+          <span class="de-card__title">Smith v. Johnson</span>
+          <span class="de-chip de-chip--progress"><span class="de-chip__dot"></span>In Progress</span>
+        </div>
+        <div class="de-card__body">
+          <p class="de-body-sm de-text-secondary">Civil litigation matter. Last edited 2 hours ago.</p>
+          <div style="margin-top:var(--space-1);display:flex;gap:var(--space-half)">
+            <span class="de-chip de-chip--neutral">3 forms</span>
+            <span class="de-chip de-chip--neutral">Superior Court</span>
+          </div>
+        </div>
+        <div class="de-card__footer">
+          <button class="de-btn de-btn--ghost de-btn--sm">View</button>
+          <button class="de-btn de-btn--accent de-btn--sm" style="margin-left:auto">Edit</button>
+        </div>
+      </div>
+      <div class="de-card" style="width:320px">
+        <div class="de-card__header">
+          <span class="de-card__title">CR-2024-445</span>
+          <span class="de-chip de-chip--complete"><span class="de-chip__dot"></span>Complete</span>
+        </div>
+        <div class="de-card__body">
+          <p class="de-body-sm de-text-secondary">Criminal defense matter. Filed yesterday.</p>
+          <div style="margin-top:var(--space-1);display:flex;gap:var(--space-half)">
+            <span class="de-chip de-chip--neutral">7 forms</span>
+            <span class="de-chip de-chip--neutral">Federal Court</span>
+          </div>
+        </div>
+        <div class="de-card__footer">
+          <button class="de-btn de-btn--ghost de-btn--sm">View</button>
+          <button class="de-btn de-btn--outlined de-btn--sm" style="margin-left:auto">Download</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TABLE / DATAGRID
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Datagrid / Table</h2>
+    <p class="section-desc">Header background uses greyscale-300 (light) / greyscale-700 (dark). Selected rows use orange-100 / orange-900.</p>
+    <div class="de-table-wrap">
+      <table class="de-table">
+        <thead>
+          <tr>
+            <th>Form Name</th>
+            <th>Matter</th>
+            <th>Status</th>
+            <th>Last Edited</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="is-selected">
+            <td>CR-001 Complaint</td>
+            <td>Smith v. Johnson</td>
+            <td><span class="de-chip de-chip--progress de-chip--sm"><span class="de-chip__dot"></span>In Progress</span></td>
+            <td>2h ago</td>
+            <td><button class="de-btn de-btn--ghost de-btn--sm">Edit</button></td>
+          </tr>
+          <tr>
+            <td>Motion to Dismiss</td>
+            <td>CR-2024-445</td>
+            <td><span class="de-chip de-chip--complete"><span class="de-chip__dot"></span>Complete</span></td>
+            <td>Yesterday</td>
+            <td><button class="de-btn de-btn--ghost de-btn--sm">View</button></td>
+          </tr>
+          <tr>
+            <td>Discovery Request</td>
+            <td>Davis Estate</td>
+            <td><span class="de-chip de-chip--neutral"><span class="de-chip__dot"></span>Draft</span></td>
+            <td>3 days ago</td>
+            <td><button class="de-btn de-btn--ghost de-btn--sm">Edit</button></td>
+          </tr>
+          <tr>
+            <td>Summons</td>
+            <td>Wilson v. City</td>
+            <td><span class="de-chip de-chip--error"><span class="de-chip__dot"></span>Error</span></td>
+            <td>1 week ago</td>
+            <td><button class="de-btn de-btn--ghost de-btn--sm">Fix</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ACCORDION
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Accordion</h2>
+    <p class="section-desc">Expandable sections. Click to toggle.</p>
+    <div class="de-accordion" style="max-width:600px">
+      <div class="de-accordion__item is-open">
+        <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+          Form Settings
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="de-accordion__content">
+          Configure form properties including default values, visibility settings, and filing requirements for this court.
+        </div>
+      </div>
+      <div class="de-accordion__item">
+        <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+          Matter Association
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="de-accordion__content">
+          Link this form to one or more matters. Changes will propagate to all associated matters automatically.
+        </div>
+      </div>
+      <div class="de-accordion__item">
+        <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+          Filing Requirements
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="de-accordion__content">
+          Court-specific filing requirements, deadlines, and document format specifications.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SNACKBARS / ALERTS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Snackbars &amp; Alerts</h2>
+    <p class="section-desc">4 variants: success, warning, error, info.</p>
+    <div class="col" style="max-width:480px;gap:var(--space-1)">
+      <div class="de-snackbar de-snackbar--success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Form submitted successfully.
+      </div>
+      <div class="de-snackbar de-snackbar--warning">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Missing required fields — please review.
+      </div>
+      <div class="de-snackbar de-snackbar--error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Failed to save. Please try again.
+      </div>
+      <div class="de-snackbar de-snackbar--info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Your session expires in 30 minutes.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       STEPPER
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Stepper</h2>
+    <p class="section-desc">Multi-step process indicator for form completion flow.</p>
+    <div class="component-card">
+      <div class="de-stepper" style="max-width:500px">
+        <div class="de-stepper__step is-complete">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div class="de-stepper__circle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="de-stepper__label">Client Info</div>
+          </div>
+          <div class="de-stepper__line"></div>
+        </div>
+        <div class="de-stepper__step is-complete">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div class="de-stepper__circle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="de-stepper__label">Matter</div>
+          </div>
+          <div class="de-stepper__line"></div>
+        </div>
+        <div class="de-stepper__step is-active">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div class="de-stepper__circle">3</div>
+            <div class="de-stepper__label">Form Details</div>
+          </div>
+          <div class="de-stepper__line"></div>
+        </div>
+        <div class="de-stepper__step">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div class="de-stepper__circle">4</div>
+            <div class="de-stepper__label">Review</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MENU
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Menu &amp; Dropdown</h2>
+    <p class="section-desc">Contextual menu. Hover uses orange-100 tint, focused state uses geminiOrange.</p>
+    <div class="row" style="align-items:flex-start">
+      <div class="de-menu" style="position:relative">
+        <div class="de-menu__label">Actions</div>
+        <div class="de-menu__item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Form
+        </div>
+        <div class="de-menu__item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Duplicate
+        </div>
+        <div class="de-menu__item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Export
+        </div>
+        <div class="de-menu__divider"></div>
+        <div class="de-menu__item is-focused">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Delete
+        </div>
+        <div class="de-menu__item is-disabled">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Lock (disabled)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TOOLTIP
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Tooltip</h2>
+    <p class="section-desc">Hover to reveal. Dark background (#424242), white text.</p>
+    <div class="component-card">
+      <div class="row">
+        <div class="de-tooltip-wrap">
+          <button class="de-btn de-btn--outlined">Hover me</button>
+          <div class="de-tooltip">Opens the form editor</div>
+        </div>
+        <div class="de-tooltip-wrap">
+          <button class="de-btn de-btn--icon de-btn--neutral">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
+          <div class="de-tooltip">More information</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DROPPAD
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Droppad</h2>
+    <p class="section-desc">File upload drop zone. Blue outline and tinted background.</p>
+    <div class="de-droppad" style="max-width:480px">
+      <svg class="de-droppad__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <div class="de-droppad__text">Drop files here or click to upload</div>
+      <div class="de-droppad__sub">Supports PDF, DOCX, up to 50MB</div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       AVATARS & BADGES
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Avatars &amp; Badges</h2>
+    <div class="component-card">
+      <div class="subsection-title">Avatars</div>
+      <div class="row" style="align-items:center">
+        <div class="de-avatar de-avatar--sm">JS</div>
+        <div class="de-avatar de-avatar--md">MK</div>
+        <div class="de-avatar de-avatar--lg">AB</div>
+        <div class="de-avatar de-avatar--md" style="background:var(--btn-action-bg)">RL</div>
+        <div class="de-avatar de-avatar--md" style="background:var(--color-grey-600)">DW</div>
+      </div>
+      <div class="subsection-title" style="margin-top:var(--space-2)">Badges</div>
+      <div class="row" style="align-items:center">
+        <span class="de-badge">5</span>
+        <span class="de-badge de-badge--action">12</span>
+        <span class="de-badge de-badge--error">3</span>
+        <span class="de-badge de-badge--neutral">0</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIVIDERS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Dividers</h2>
+    <div class="component-card">
+      <div class="de-body-sm de-text-secondary" style="margin-bottom:var(--space-1)">Default divider</div>
+      <hr class="de-divider" />
+      <div class="de-body-sm de-text-secondary" style="margin-top:var(--space-2);margin-bottom:var(--space-1)">Alt divider</div>
+      <hr class="de-divider de-divider--alt" />
+    </div>
+  </section>
+
+</div><!-- /showcase -->
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
+    // Update icon
+    const icon = document.getElementById('theme-icon');
+    if (!isDark) {
+      icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    } else {
+      icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+    }
+  }
+
+  function toggleAccordion(trigger) {
+    const item = trigger.closest('.de-accordion__item');
+    item.classList.toggle('is-open');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DraftEngine Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./components.css" />
+  <script src="https://kit.fontawesome.com/32dfe1c9ba.js" crossorigin="anonymous"></script>
+  <style>
+    /* Showcase-only styles */
+    .showcase { max-width: 1100px; margin: 0 auto; padding: var(--space-5) var(--space-3); }
+    .section   { margin-bottom: var(--space-8); }
+    .section-title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+      padding-bottom: var(--space-1);
+      border-bottom: 2px solid var(--btn-accent-bg);
+      display: inline-block;
+    }
+    .section-desc {
+      font-size: var(--font-size-body-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+    .subsection-title {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-1);
+      margin-top: var(--space-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: var(--font-size-xs);
+    }
+    .row  { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-start; }
+    .col  { display: flex; flex-direction: column; gap: var(--space-1); }
+    .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--space-2); }
+    .swatch {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--divider);
+    }
+    .swatch__color { height: 64px; }
+    .swatch__label {
+      padding: 6px 8px;
+      background: var(--bg-primary);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      font-weight: var(--font-weight-semibold);
+    }
+    .swatch__hex {
+      padding: 0 8px 6px;
+      background: var(--bg-primary);
+      font-size: var(--font-size-xs);
+      color: var(--text-disabled);
+      font-family: monospace;
+    }
+    .type-row {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-3);
+      padding: var(--space-1) 0;
+      border-bottom: 1px solid var(--divider);
+    }
+    .type-meta {
+      min-width: 130px;
+      font-size: var(--font-size-xs);
+      color: var(--text-disabled);
+      font-family: monospace;
+    }
+    .space-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 6px 0;
+    }
+    .space-bar {
+      background: var(--btn-accent-bg);
+      height: 20px;
+      border-radius: var(--radius-sm);
+      opacity: 0.7;
+    }
+    .space-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      font-family: monospace;
+      min-width: 120px;
+    }
+    /* Sidebar demo container */
+    .sidebar-demo {
+      display: flex;
+      height: 340px;
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .sidebar-demo__content {
+      flex: 1;
+      padding: var(--space-2);
+      background: var(--bg-page);
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Theme toggle in top bar */
+    .showcase-header {
+      background: var(--appbar-gradient);
+      padding: var(--space-2) var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .showcase-header__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-xl);
+      color: #fff;
+    }
+    .showcase-header__right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .showcase-header__badge {
+      font-size: var(--font-size-sm);
+      color: rgba(255,255,255,0.8);
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: var(--radius-xl);
+      padding: 4px var(--space-1);
+      cursor: pointer;
+      color: #fff;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      font-family: var(--font-family);
+      transition: background var(--transition-fast);
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.25); }
+    .appbar-demo {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--divider);
+    }
+    .component-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="showcase-header">
+  <div class="showcase-header__brand">
+    <!-- Gemini Logo SVG -->
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 3 L24 22 H4 Z" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M10 22 Q14 14 18 22" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    DraftEngine
+  </div>
+  <div class="showcase-header__right">
+    <span class="showcase-header__badge">Design System v1.0</span>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i id="theme-icon" class="fa-solid fa-sun-bright" style="font-size:14px"></i>
+      <span id="theme-label">Light</span>
+    </button>
+  </div>
+</header>
+
+<div class="showcase">
+
+  <!-- ============================================================
+       COLORS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Colors</h2>
+    <p class="section-desc">Primitive palette — referenced by semantic tokens in Light and Dark modes.</p>
+
+    <div class="subsection-title">Orange / Brand</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#DA8427"></div><div class="swatch__label">Gemini Orange</div><div class="swatch__hex">#DA8427</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#D34A00"></div><div class="swatch__label">Gradient End</div><div class="swatch__hex">#D34A00</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFE0B2"></div><div class="swatch__label">Orange 100</div><div class="swatch__hex">#FFE0B2</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFB74D"></div><div class="swatch__label">Orange 300</div><div class="swatch__hex">#FFB74D</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#4E3418"></div><div class="swatch__label">Orange 900</div><div class="swatch__hex">#4E3418</div></div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Blue / Action</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#0071FF"></div><div class="swatch__label">Gemini Blue</div><div class="swatch__hex">#0071FF</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#00408F"></div><div class="swatch__label">Blue 600</div><div class="swatch__hex">#00408F</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#B3E5FC"></div><div class="swatch__label">Blue 100</div><div class="swatch__hex">#B3E5FC</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#E3F2FD"></div><div class="swatch__label">Blue 50</div><div class="swatch__hex">#E3F2FD</div></div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Greyscale</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#FFFFFF; border:1px solid #eee"></div><div class="swatch__label">Grey 0</div><div class="swatch__hex">#FFFFFF</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#F1F1F1"></div><div class="swatch__label">Grey 100</div><div class="swatch__hex">#F1F1F1</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#E9E9E9"></div><div class="swatch__label">Grey 200</div><div class="swatch__hex">#E9E9E9</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#D9D9D9"></div><div class="swatch__label">Grey 300</div><div class="swatch__hex">#D9D9D9</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#A1A1A1"></div><div class="swatch__label">Grey 400</div><div class="swatch__hex">#A1A1A1</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#979797"></div><div class="swatch__label">Grey 500</div><div class="swatch__hex">#979797</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#424242"></div><div class="swatch__label">Grey 600</div><div class="swatch__hex">#424242</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#363636"></div><div class="swatch__label">Grey 700</div><div class="swatch__hex">#363636</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#212121"></div><div class="swatch__label">Grey 800</div><div class="swatch__hex">#212121</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#121212"></div><div class="swatch__label">Grey 900</div><div class="swatch__hex">#121212</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#000000"></div><div class="swatch__label">Grey 1000</div><div class="swatch__hex">#000000</div></div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Semantic — Status</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch__color" style="background:#81C784"></div><div class="swatch__label">Complete</div><div class="swatch__hex">#81C784</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#C8E6C9"></div><div class="swatch__label">Complete Bg</div><div class="swatch__hex">#C8E6C9</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFF176"></div><div class="swatch__label">In Progress</div><div class="swatch__hex">#FFF176</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFF9C4"></div><div class="swatch__label">Progress Bg</div><div class="swatch__hex">#FFF9C4</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#E57373"></div><div class="swatch__label">Error</div><div class="swatch__hex">#E57373</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#FFCDD2"></div><div class="swatch__label">Error Bg</div><div class="swatch__hex">#FFCDD2</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#F44336"></div><div class="swatch__label">Warning</div><div class="swatch__hex">#F44336</div></div>
+      <div class="swatch"><div class="swatch__color" style="background:#D9D9D9"></div><div class="swatch__label">Neutral</div><div class="swatch__hex">#D9D9D9</div></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TYPOGRAPHY
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Typography</h2>
+    <p class="section-desc">Fira Sans. Headings 700, body 400.</p>
+    <div class="component-card">
+      <div class="type-row">
+        <div class="type-meta">h1 · 18px · 700</div>
+        <div class="de-h1">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">h2 · 16px · 700</div>
+        <div class="de-h2">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">h3 · 15px · 700</div>
+        <div class="de-h3">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">h4 · 14px · 700</div>
+        <div class="de-h4">The quick brown fox</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">body1 · 15px · 400</div>
+        <div class="de-body1">The quick brown fox jumps over the lazy dog. Legal document editing platform for attorneys.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">body2 · 14px · 400</div>
+        <div class="de-body2">The quick brown fox jumps over the lazy dog. Legal document editing platform for attorneys.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">body3 · 12px · 400</div>
+        <div class="de-body3">The quick brown fox jumps over the lazy dog.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SPACING
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Spacing</h2>
+    <p class="section-desc">8px base unit. All spacing multiplied by 8 (plus 4px half unit).</p>
+    <div class="component-card">
+      <div class="space-row"><div class="space-label">half — 4px</div><div class="space-bar" style="width:4px"></div></div>
+      <div class="space-row"><div class="space-label">space-1 — 8px</div><div class="space-bar" style="width:8px"></div></div>
+      <div class="space-row"><div class="space-label">space-2 — 16px</div><div class="space-bar" style="width:16px"></div></div>
+      <div class="space-row"><div class="space-label">space-3 — 24px</div><div class="space-bar" style="width:24px"></div></div>
+      <div class="space-row"><div class="space-label">space-4 — 32px</div><div class="space-bar" style="width:32px"></div></div>
+      <div class="space-row"><div class="space-label">space-5 — 40px</div><div class="space-bar" style="width:40px"></div></div>
+      <div class="space-row"><div class="space-label">space-6 — 48px</div><div class="space-bar" style="width:48px"></div></div>
+      <div class="space-row"><div class="space-label">space-7 — 56px</div><div class="space-bar" style="width:56px"></div></div>
+      <div class="space-row"><div class="space-label">space-8 — 64px</div><div class="space-bar" style="width:64px"></div></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       APPBAR
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Appbar</h2>
+    <p class="section-desc">
+      Top navigation. Gradient: <code>105deg #DA8427 → #D34A00</code>. Height: 64px. Padding: 12px 48px.<br>
+      3-column layout: logo (116px) · nav pills (centered) · actions (116px).<br>
+      Selected pill: <code>background #212121 · color #DA8427</code>. Unselected: black text, no background.
+    </p>
+
+    <!-- Nav appbar — Dashboard active -->
+    <p class="subsection-title">Nav — Dashboard active</p>
+    <div style="border-radius:8px; overflow:hidden; margin-bottom:8px;">
+      <nav class="de-appbar">
+        <a href="#" class="de-appbar__logo">
+
+          <img src="../assets/logo.png" alt="DraftEngine" />
+        </a>
+        <div class="de-appbar__nav">
+          <a href="#" class="de-appbar__nav-item is-active">Dashboard</a>
+          <a href="#" class="de-appbar__nav-item">Matters</a>
+          <a href="#" class="de-appbar__nav-item">Forms</a>
+          <a href="#" class="de-appbar__nav-item">Settings</a>
+        </div>
+        <div class="de-appbar__actions">
+          <button class="de-appbar__icon-btn" title="Theme"><i class="fa-regular fa-sun-bright"></i></button>
+          <button class="de-appbar__icon-btn" title="Favorites"><i class="fa-regular fa-thumbs-up"></i></button>
+          <button class="de-appbar__icon-btn" title="Account"><i class="fa-regular fa-user"></i></button>
+          <button class="de-appbar__hamburger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+        </div>
+        <div class="de-appbar__mobile-menu">
+          <a href="#" class="de-appbar__mobile-item is-active">Dashboard</a>
+          <a href="#" class="de-appbar__mobile-item">Matters</a>
+          <a href="#" class="de-appbar__mobile-item">Forms</a>
+          <a href="#" class="de-appbar__mobile-item">Settings</a>
+        </div>
+        <div class="de-appbar__mobile-backdrop"></div>
+      </nav>
+      <div class="de-appbar__divider"></div>
+    </div>
+
+    <!-- Nav appbar — Matters active -->
+    <p class="subsection-title">Nav — Matters active</p>
+    <div style="border-radius:8px; overflow:hidden; margin-bottom:8px;">
+      <nav class="de-appbar">
+        <a href="#" class="de-appbar__logo">
+
+          <img src="../assets/logo.png" alt="DraftEngine" />
+        </a>
+        <div class="de-appbar__nav">
+          <a href="#" class="de-appbar__nav-item">Dashboard</a>
+          <a href="#" class="de-appbar__nav-item is-active">Matters</a>
+          <a href="#" class="de-appbar__nav-item">Forms</a>
+          <a href="#" class="de-appbar__nav-item">Settings</a>
+        </div>
+        <div class="de-appbar__actions">
+          <button class="de-appbar__icon-btn" title="Theme"><i class="fa-regular fa-sun-bright"></i></button>
+          <button class="de-appbar__icon-btn" title="Favorites"><i class="fa-regular fa-thumbs-up"></i></button>
+          <button class="de-appbar__icon-btn" title="Account"><i class="fa-regular fa-user"></i></button>
+          <button class="de-appbar__hamburger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+        </div>
+        <div class="de-appbar__mobile-menu">
+          <a href="#" class="de-appbar__mobile-item">Dashboard</a>
+          <a href="#" class="de-appbar__mobile-item is-active">Matters</a>
+          <a href="#" class="de-appbar__mobile-item">Forms</a>
+          <a href="#" class="de-appbar__mobile-item">Settings</a>
+        </div>
+        <div class="de-appbar__mobile-backdrop"></div>
+      </nav>
+      <div class="de-appbar__divider"></div>
+    </div>
+
+    <!-- Form header variant -->
+    <p class="subsection-title">Form header variant — inside form filler</p>
+    <p class="section-desc" style="margin-bottom:8px;">
+      Shows matter context + progress. Close (✕) exits the form filler with changes saved.
+    </p>
+    <div style="border-radius:8px; overflow:hidden;">
+      <header class="de-appbar--form">
+        <div class="de-appbar-form__left">
+          <button class="de-appbar-form__close" title="Exit form — changes are saved">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+          <div class="de-appbar-form__matter">
+            <span class="de-appbar-form__matter-name">Matter Name</span>
+            <span class="de-appbar-form__matter-number"># Matter Number</span>
+          </div>
+          <div class="de-appbar-form__meta">
+            <span class="de-appbar-form__meta-item">
+              <i class="fa-regular fa-user"></i> Client Name
+            </span>
+            <span class="de-appbar-form__meta-item">
+              <i class="fa-regular fa-landmark"></i> Court / Jurisdiction Name
+            </span>
+          </div>
+        </div>
+        <div class="de-appbar-form__right">
+          <div class="de-appbar-form__progress">
+            <div class="de-appbar-form__progress-track">
+              <div class="de-appbar-form__progress-fill" style="width:60%"></div>
+            </div>
+            <span class="de-appbar-form__progress-label">60% Complete</span>
+          </div>
+          <div class="de-appbar-form__status">
+            <i class="fa-solid fa-circle-check"></i>
+            All changes saved
+          </div>
+        </div>
+      </header>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TABS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Tabs</h2>
+    <p class="section-desc">Horizontal tab navigation. Active tab: accent orange text + orange underline. Inactive: secondary text. Hover: accent orange text.</p>
+
+    <p class="subsection-title">Default (Tab 1 active)</p>
+    <div class="de-tabs">
+      <a href="#" class="de-tab is-active">Overview</a>
+      <a href="#" class="de-tab">Documents</a>
+      <a href="#" class="de-tab">Tasks</a>
+      <a href="#" class="de-tab">Billing</a>
+      <a href="#" class="de-tab">Notes</a>
+    </div>
+
+    <p class="subsection-title" style="margin-top:var(--space-4)">Second tab active</p>
+    <div class="de-tabs">
+      <a href="#" class="de-tab">Overview</a>
+      <a href="#" class="de-tab is-active">Documents</a>
+      <a href="#" class="de-tab">Tasks</a>
+      <a href="#" class="de-tab">Billing</a>
+      <a href="#" class="de-tab">Notes</a>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Sidebar / Index</h2>
+    <p class="section-desc">Left navigation panel. Selected state uses accent orange. Hover uses orange-100 tint.</p>
+    <div class="sidebar-demo">
+      <nav class="de-sidebar">
+        <div class="de-sidebar__item">
+          <i class="de-sidebar__icon fa-regular fa-pen-to-square"></i>
+          Dashboard
+        </div>
+        <div class="de-sidebar__item is-active">
+          <i class="de-sidebar__icon fa-regular fa-pen-to-square"></i>
+          Forms
+        </div>
+        <div class="de-sidebar__item">
+          <i class="de-sidebar__icon fa-regular fa-suitcase"></i>
+          Matters
+        </div>
+        <div class="de-sidebar__divider"></div>
+        <div class="de-sidebar__section-label">Settings</div>
+        <div class="de-sidebar__item">
+          <i class="de-sidebar__icon fa-regular fa-user"></i>
+          Contacts
+        </div>
+        <div class="de-sidebar__item">
+          <i class="de-sidebar__icon fa-solid fa-gear"></i>
+          Admin
+        </div>
+      </nav>
+      <div class="sidebar-demo__content">← Select a sidebar item</div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BUTTONS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Buttons</h2>
+    <p class="section-desc">6 variants · MUI Button · hover, focus-visible &amp; click ripple to interact.</p>
+
+    <div class="component-card">
+
+      <div class="subsection-title">Primary</div>
+      <div class="row" style="align-items:center;margin-bottom:var(--space-3)">
+        <button class="de-btn de-btn--primary">Button</button>
+        <button class="de-btn de-btn--primary" disabled>Button</button>
+      </div>
+
+      <div class="subsection-title">Secondary</div>
+      <div class="row" style="align-items:center;margin-bottom:var(--space-3)">
+        <button class="de-btn de-btn--secondary">Button</button>
+        <button class="de-btn de-btn--secondary" disabled>Button</button>
+      </div>
+
+      <div class="subsection-title">Filled</div>
+      <div class="row" style="align-items:center;margin-bottom:var(--space-3)">
+        <button class="de-btn de-btn--filled">Button</button>
+        <button class="de-btn de-btn--filled" disabled>Button</button>
+      </div>
+
+      <div class="subsection-title">Text</div>
+      <div class="row" style="align-items:center;margin-bottom:var(--space-3)">
+        <button class="de-btn de-btn--text">Button</button>
+        <button class="de-btn de-btn--text" disabled>Button</button>
+      </div>
+
+      <div class="subsection-title">Icon Left</div>
+      <div class="row" style="align-items:center;margin-bottom:var(--space-3)">
+        <button class="de-btn de-btn--icon-left"><i class="fa-solid fa-xmark"></i>Button</button>
+        <button class="de-btn de-btn--icon-left" disabled><i class="fa-solid fa-xmark"></i>Button</button>
+      </div>
+
+      <div class="subsection-title">Icon Right</div>
+      <div class="row" style="align-items:center;margin-bottom:var(--space-3)">
+        <button class="de-btn de-btn--icon-right">Button<i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+        <button class="de-btn de-btn--icon-right" disabled>Button<i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+      </div>
+
+      <div class="subsection-title">Sizes — Primary</div>
+      <div class="row" style="align-items:center">
+        <button class="de-btn de-btn--primary de-btn--sm">Small</button>
+        <button class="de-btn de-btn--primary">Default</button>
+        <button class="de-btn de-btn--primary de-btn--lg">Large</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SWITCH
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Switch</h2>
+    <p class="section-desc">
+      Track: <code>29.714×16px</code> · radius <code>17.5px</code>.
+      OFF: <code>#A1A1A1</code> · ON: <code>#0071FF</code>.
+      Thumb: white circle <code>13.26px</code>. Label: 15px regular, right of track.
+    </p>
+
+    <div class="component-card">
+      <div class="subsection-title">Switch only</div>
+      <div class="row" style="gap:var(--space-4);align-items:center;margin-bottom:var(--space-3)">
+        <!-- OFF -->
+        <label class="de-switch">
+          <input type="checkbox" class="de-switch__input">
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+        </label>
+        <!-- ON -->
+        <label class="de-switch">
+          <input type="checkbox" class="de-switch__input" checked>
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+        </label>
+        <!-- Disabled OFF -->
+        <label class="de-switch is-disabled">
+          <input type="checkbox" class="de-switch__input" disabled>
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+        </label>
+        <!-- Disabled ON -->
+        <label class="de-switch is-disabled">
+          <input type="checkbox" class="de-switch__input" checked disabled>
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+        </label>
+      </div>
+
+      <div class="subsection-title">Switch with label (text right)</div>
+      <div class="col" style="gap:var(--space-2)">
+        <label class="de-switch">
+          <input type="checkbox" class="de-switch__input">
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+          <span class="de-switch__label">Enable notifications</span>
+        </label>
+        <label class="de-switch">
+          <input type="checkbox" class="de-switch__input" checked>
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+          <span class="de-switch__label">Auto-save drafts</span>
+        </label>
+        <label class="de-switch">
+          <input type="checkbox" class="de-switch__input" checked>
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+          <span class="de-switch__label">Rush mode</span>
+        </label>
+        <label class="de-switch is-disabled">
+          <input type="checkbox" class="de-switch__input" disabled>
+          <span class="de-switch__track"><span class="de-switch__thumb"></span></span>
+          <span class="de-switch__label">Unavailable option</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CHECKBOX
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Checkbox</h2>
+    <p class="section-desc">MUI Checkbox · 36×36 circular ripple · click to toggle · 3 variants.</p>
+
+    <div class="component-card">
+
+      <div class="subsection-title">Unchecked → Checked (click to toggle)</div>
+      <div class="row" style="align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
+        <label class="de-checkbox">
+          <input type="checkbox" class="de-checkbox__input" />
+          <span class="de-checkbox__ripple"><i class="fa-regular fa-square"></i></span>
+        </label>
+        <label class="de-checkbox is-checked">
+          <input type="checkbox" class="de-checkbox__input" checked />
+          <span class="de-checkbox__ripple"><i class="fa-solid fa-square-check"></i></span>
+        </label>
+        <label class="de-checkbox de-checkbox--indeterminate">
+          <input type="checkbox" class="de-checkbox__input" />
+          <span class="de-checkbox__ripple"><i class="fa-solid fa-square-minus"></i></span>
+        </label>
+        <label class="de-checkbox is-disabled">
+          <input type="checkbox" class="de-checkbox__input" disabled />
+          <span class="de-checkbox__ripple"><i class="fa-duotone fa-regular fa-square"></i></span>
+        </label>
+      </div>
+
+      <div class="subsection-title">With label</div>
+      <div class="col" style="align-items:flex-start;gap:4px">
+        <label class="de-checkbox">
+          <input type="checkbox" class="de-checkbox__input" />
+          <span class="de-checkbox__ripple"><i class="fa-regular fa-square"></i></span>
+          <span class="de-checkbox__label">Accept terms and conditions</span>
+        </label>
+        <label class="de-checkbox is-checked">
+          <input type="checkbox" class="de-checkbox__input" checked />
+          <span class="de-checkbox__ripple"><i class="fa-solid fa-square-check"></i></span>
+          <span class="de-checkbox__label">Send email notifications</span>
+        </label>
+        <label class="de-checkbox de-checkbox--indeterminate">
+          <input type="checkbox" class="de-checkbox__input" />
+          <span class="de-checkbox__ripple"><i class="fa-solid fa-square-minus"></i></span>
+          <span class="de-checkbox__label">Select all (3 of 7)</span>
+        </label>
+        <label class="de-checkbox is-disabled">
+          <input type="checkbox" class="de-checkbox__input" disabled />
+          <span class="de-checkbox__ripple"><i class="fa-duotone fa-regular fa-square"></i></span>
+          <span class="de-checkbox__label">Disabled option</span>
+        </label>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CHIPS / STATUS BADGES
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Chips &amp; Status</h2>
+    <p class="section-desc">7 status variants · 10px uppercase · no dots.</p>
+    <div class="component-card">
+
+      <div class="subsection-title">Complete</div>
+      <div class="row" style="margin-bottom:var(--space-2)">
+        <span class="de-chip de-chip--complete-dark">Cleared</span>
+        <span class="de-chip de-chip--complete-light">Issued</span>
+      </div>
+
+      <div class="subsection-title">In Progress</div>
+      <div class="row" style="margin-bottom:var(--space-2)">
+        <span class="de-chip de-chip--progress-dark">Processing</span>
+        <span class="de-chip de-chip--progress-light">Pending</span>
+      </div>
+
+      <div class="subsection-title">Error</div>
+      <div class="row" style="margin-bottom:var(--space-2)">
+        <span class="de-chip de-chip--error-dark">Denied</span>
+        <span class="de-chip de-chip--error-light">Voided</span>
+      </div>
+
+      <div class="subsection-title">Neutral</div>
+      <div class="row" style="margin-bottom:var(--space-3)">
+        <span class="de-chip de-chip--neutral">Awaiting Approval</span>
+      </div>
+
+      <div class="subsection-title">Chip Input &amp; Dropdown</div>
+      <div class="row">
+        <span class="de-chip-input">
+          Los Angeles
+          <i class="de-chip-input__remove fa-solid fa-circle-xmark"></i>
+        </span>
+        <span class="de-chip-input">
+          San Francisco
+          <i class="de-chip-input__remove fa-solid fa-circle-xmark"></i>
+        </span>
+        <button class="de-chip-dropdown">
+          Status
+          <i class="fa-solid fa-caret-down"></i>
+        </button>
+        <button class="de-chip-dropdown">
+          Court
+          <i class="fa-solid fa-caret-down"></i>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       INPUTS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Inputs</h2>
+    <p class="section-desc">MUI filled variant — floating label floats up on focus or when value is present. Bottom border indicates state.</p>
+
+    <div class="subsection-title">Text Field — All States</div>
+    <div class="component-card">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)">
+
+        <!-- Enabled, empty -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">Enabled</div>
+          <div class="de-field">
+            <input class="de-field__input" type="text" id="tf-enabled" placeholder=" " />
+            <label class="de-field__label" for="tf-enabled">Label</label>
+          </div>
+        </div>
+
+        <!-- Enabled, with value -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">Enabled — value</div>
+          <div class="de-field">
+            <input class="de-field__input" type="text" id="tf-value" placeholder=" " value="Value" />
+            <label class="de-field__label" for="tf-value">Label</label>
+          </div>
+        </div>
+
+        <!-- Hover (simulated via class) -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">Error</div>
+          <div class="de-field de-field--error">
+            <input class="de-field__input" type="text" id="tf-error" placeholder=" " value="Invalid entry" />
+            <label class="de-field__label" for="tf-error">Label</label>
+            <span class="de-field__helper">This is a required field.</span>
+          </div>
+        </div>
+
+        <!-- Error, empty -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">Error — empty</div>
+          <div class="de-field de-field--error">
+            <input class="de-field__input" type="text" id="tf-error-empty" placeholder=" " />
+            <label class="de-field__label" for="tf-error-empty">Label</label>
+            <span class="de-field__helper">This is a required field.</span>
+          </div>
+        </div>
+
+        <!-- Disabled, with value -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">Disabled — value</div>
+          <div class="de-field">
+            <input class="de-field__input" type="text" id="tf-disabled-val" placeholder=" " value="Value" disabled />
+            <label class="de-field__label" for="tf-disabled-val">Label</label>
+          </div>
+        </div>
+
+        <!-- Disabled, empty -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">Disabled — empty</div>
+          <div class="de-field">
+            <input class="de-field__input" type="text" id="tf-disabled" placeholder=" " disabled />
+            <label class="de-field__label" for="tf-disabled">Label</label>
+          </div>
+        </div>
+
+        <!-- Calendar adornment -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">With date icon</div>
+          <div class="de-field de-field--icon">
+            <input class="de-field__input" type="date" id="tf-cal" placeholder=" " />
+            <label class="de-field__label" for="tf-cal">Filing Date</label>
+            <button type="button" class="de-field__icon--btn" onclick="document.getElementById('tf-cal').showPicker()">
+              <i class="fa-solid fa-calendar-day"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Time adornment -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">With time icon</div>
+          <div class="de-field de-field--icon">
+            <input class="de-field__input" type="time" id="tf-time" placeholder=" " />
+            <label class="de-field__label" for="tf-time">Hearing Time</label>
+            <button type="button" class="de-field__icon--btn" onclick="document.getElementById('tf-time').showPicker()">
+              <i class="fa-solid fa-clock"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Multiline -->
+        <div>
+          <div class="section-desc" style="margin-bottom:var(--space-1)">Multiline</div>
+          <div class="de-field">
+            <textarea class="de-field__textarea" id="tf-multi" placeholder=" "></textarea>
+            <label class="de-field__label" for="tf-multi">Notes</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Select -->
+    <div class="subsection-title" style="margin-top:var(--space-4)">Select</div>
+    <p class="section-desc">
+      Filled variant. Custom dropdown: <code>bg #121212</code> · <code>shadow 0 0 4px 4px rgba(0,0,0,.1)</code> · 4px scrollbar.
+      Hover: <code>#FFE0B2</code> bg · black text. Caret: <code>fa-caret-down / fa-caret-up</code> solid.
+    </p>
+    <div class="component-card">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-3);align-items:start">
+
+        <!-- Enabled with value -->
+        <div>
+          <div class="section-desc" style="margin-bottom:6px">Enabled</div>
+          <div class="de-select-wrap de-custom-select">
+            <span class="de-select-wrap__label">Label</span>
+            <button class="de-select-trigger" type="button">
+              Value
+              <i class="de-select-trigger__caret fa-solid fa-caret-down"></i>
+            </button>
+            <div class="de-select-dropdown">
+              <div class="de-select-dropdown__list">
+                <div class="de-select-option is-selected">Value</div>
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enabled, no value -->
+        <div>
+          <div class="section-desc" style="margin-bottom:6px">Enabled (no value)</div>
+          <div class="de-select-wrap de-custom-select">
+            <button class="de-select-trigger" type="button" data-empty="true">
+              Label
+              <i class="de-select-trigger__caret fa-solid fa-caret-down"></i>
+            </button>
+            <div class="de-select-dropdown">
+              <div class="de-select-dropdown__list">
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Error -->
+        <div>
+          <div class="section-desc" style="margin-bottom:6px">Error</div>
+          <div class="de-select-wrap de-custom-select is-error">
+            <span class="de-select-wrap__label">Label</span>
+            <button class="de-select-trigger" type="button">
+              Value
+              <i class="de-select-trigger__caret fa-solid fa-caret-down"></i>
+            </button>
+            <div class="de-select-dropdown">
+              <div class="de-select-dropdown__list">
+                <div class="de-select-option">Menu Item</div>
+                <div class="de-select-option">Menu Item</div>
+              </div>
+            </div>
+            <span class="de-select-wrap__helper">This is a required field.</span>
+          </div>
+        </div>
+
+        <!-- Disabled -->
+        <div>
+          <div class="section-desc" style="margin-bottom:6px">Disabled</div>
+          <div class="de-select-wrap is-disabled">
+            <span class="de-select-wrap__label" style="color:var(--input-disabled)">Label</span>
+            <button class="de-select-trigger" type="button" disabled>
+              Value
+              <i class="de-select-trigger__caret fa-solid fa-caret-down"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Multi Select -->
+    <div class="subsection-title" style="margin-top:var(--space-4)">Multi Select</div>
+    <p class="section-desc">
+      Chip-based. Chip delete: <code>fa-circle-xmark</code> (solid). Clear all: <code>fa-xmark</code> (solid).
+      Collapse: <code>fa-caret-up</code> · Expand: <code>fa-caret-down</code>. Both solid.
+    </p>
+    <div class="component-card">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-3);align-items:start">
+
+        <!-- Interactive multiselect -->
+        <div style="max-width:360px;position:relative">
+          <div class="de-multiselect-wrap" id="ms-wrap">
+            <span class="de-multiselect-wrap__label" id="ms-label">Status</span>
+            <div class="de-multiselect" id="ms-field" role="combobox" aria-haspopup="listbox" aria-expanded="false" tabindex="0">
+              <div class="de-multiselect__chips" id="ms-chips"></div>
+              <div class="de-multiselect__icons">
+                <button class="de-multiselect__clear" id="ms-clear" aria-label="Clear all" style="display:none">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+                <span class="de-multiselect__caret" id="ms-caret"><i class="fa-solid fa-caret-down"></i></span>
+              </div>
+            </div>
+            <!-- Dropdown -->
+            <div class="de-multiselect__dropdown" id="ms-dropdown" role="listbox" aria-multiselectable="true" style="display:none">
+              <div class="de-multiselect__option" data-value="In Progress" role="option">
+                <span class="de-multiselect__option-check"><i class="fa-solid fa-check"></i></span>
+                In Progress
+              </div>
+              <div class="de-multiselect__option" data-value="Complete" role="option">
+                <span class="de-multiselect__option-check"><i class="fa-solid fa-check"></i></span>
+                Complete
+              </div>
+              <div class="de-multiselect__option" data-value="Pending" role="option">
+                <span class="de-multiselect__option-check"><i class="fa-solid fa-check"></i></span>
+                Pending
+              </div>
+              <div class="de-multiselect__option" data-value="Denied" role="option">
+                <span class="de-multiselect__option-check"><i class="fa-solid fa-check"></i></span>
+                Denied
+              </div>
+              <div class="de-multiselect__option" data-value="Draft" role="option">
+                <span class="de-multiselect__option-check"><i class="fa-solid fa-check"></i></span>
+                Draft
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SEARCH
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Search</h2>
+    <p class="section-desc">MUI filled style — plain and with dropdown caret.</p>
+
+    <div class="subsection-title">Plain search</div>
+    <div class="row" style="gap:var(--space-4); flex-wrap:wrap; align-items:flex-start">
+      <!-- Empty -->
+      <div class="de-search" style="width:280px">
+        <div class="de-search__field">
+          <span class="de-search__icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+          <input class="de-search__input" type="text" placeholder="Search matters…" aria-label="Search">
+          <button class="de-search__clear" aria-label="Clear"><i class="fa-solid fa-circle-xmark"></i></button>
+        </div>
+      </div>
+      <!-- With value (has-value to show clear) -->
+      <div class="de-search de-search--has-value" style="width:280px">
+        <div class="de-search__field">
+          <span class="de-search__icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+          <input class="de-search__input" type="text" value="Smith v." aria-label="Search">
+          <button class="de-search__clear" aria-label="Clear"><i class="fa-solid fa-circle-xmark"></i></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CARD
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Card</h2>
+    <p class="section-desc">Header: tertiary bg, 18px bold title + chip left, + and expand icons right. Rows: secondary bg, checkbox + text left, chip + edit right, divider between rows.</p>
+    <div class="row" style="align-items:flex-start">
+      <div class="de-card" style="width:560px">
+        <!-- Header -->
+        <div class="de-card__header">
+          <div class="de-card__header-left">
+            <span class="de-card__title">Pitt v. Jolie</span>
+            <span class="de-chip de-chip--complete-dark">Active</span>
+          </div>
+          <div class="de-card__header-right">
+            <i class="fa-solid fa-plus"></i>
+            <i class="fa-regular fa-arrow-up-right-and-arrow-down-left-from-center"></i>
+          </div>
+        </div>
+        <!-- Rows -->
+        <div class="de-card__row">
+          <div class="de-card__row-left">
+            <i class="fa-regular fa-square"></i>
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Discovery Response Due</span>
+              <span class="de-card__row-secondary">Due 09/02/2026 · Interrogatories</span>
+            </div>
+          </div>
+          <div class="de-card__row-right">
+            <span class="de-chip de-chip--progress-dark">In Progress</span>
+            <i class="fa-solid fa-pencil"></i>
+          </div>
+        </div>
+        <div class="de-card__row">
+          <div class="de-card__row-left">
+            <i class="fa-regular fa-square"></i>
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Motion Hearing</span>
+              <span class="de-card__row-secondary">Due 09/03/2026 · Summary Judgement</span>
+            </div>
+          </div>
+          <div class="de-card__row-right">
+            <span class="de-chip de-chip--error-dark">Overdue</span>
+            <i class="fa-solid fa-pencil"></i>
+          </div>
+        </div>
+        <div class="de-card__row">
+          <div class="de-card__row-left">
+            <i class="fa-regular fa-square"></i>
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Expert Witness Deadline</span>
+              <span class="de-card__row-secondary">Due 09/04/2026 · Technical Expert</span>
+            </div>
+          </div>
+          <div class="de-card__row-right">
+            <span class="de-chip de-chip--complete-dark">Complete</span>
+            <i class="fa-solid fa-pencil"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TABLE / DATAGRID
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Datagrid / Table</h2>
+    <p class="section-desc">Header uses greyscale-700 (dark) / greyscale-300 (light) with rounded corners. Selected uses orange-900 (dark) / orange-100 (light). Hover, selected, and disabled row states.</p>
+    <div class="de-table-wrap">
+      <table class="de-table">
+        <thead>
+          <tr>
+            <th class="de-table__drag"></th>
+            <th class="de-table__checkbox"><i class="fa-regular fa-square"></i></th>
+            <th>Form Name</th>
+            <th>Matter</th>
+            <th>Status</th>
+            <th>Last Edited</th>
+            <th>Created By</th>
+            <th class="de-table__action"><i class="fa-solid fa-pencil" style="opacity:0.4"></i></th>
+            <th class="de-table__action"><i class="fa-solid fa-trash-can" style="opacity:0.4"></i></th>
+            <th class="de-table__more"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="is-selected">
+            <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+            <td class="de-table__checkbox"><i class="fa-solid fa-square-check"></i></td>
+            <td>CR-001 Complaint</td>
+            <td>Smith v. Johnson</td>
+            <td><span class="de-chip de-chip--progress-dark de-chip--sm">In Progress</span></td>
+            <td>2h ago</td>
+            <td>V. Li</td>
+            <td class="de-table__action"><i class="fa-solid fa-pencil"></i></td>
+            <td class="de-table__action"><i class="fa-solid fa-trash-can"></i></td>
+            <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+          </tr>
+          <tr>
+            <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+            <td class="de-table__checkbox"><i class="fa-regular fa-square"></i></td>
+            <td>Motion to Dismiss</td>
+            <td>CR-2024-445</td>
+            <td><span class="de-chip de-chip--complete-dark">Complete</span></td>
+            <td>Yesterday</td>
+            <td>V. Li</td>
+            <td class="de-table__action"><i class="fa-solid fa-pencil"></i></td>
+            <td class="de-table__action"><i class="fa-solid fa-trash-can"></i></td>
+            <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+          </tr>
+          <tr>
+            <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+            <td class="de-table__checkbox"><i class="fa-regular fa-square"></i></td>
+            <td>Discovery Request</td>
+            <td>Davis Estate</td>
+            <td><span class="de-chip de-chip--neutral">Draft</span></td>
+            <td>3 days ago</td>
+            <td>A. Kim</td>
+            <td class="de-table__action"><i class="fa-solid fa-pencil"></i></td>
+            <td class="de-table__action"><i class="fa-solid fa-trash-can"></i></td>
+            <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+          </tr>
+          <tr>
+            <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+            <td class="de-table__checkbox"><i class="fa-regular fa-square"></i></td>
+            <td>Summons</td>
+            <td>Wilson v. City</td>
+            <td><span class="de-chip de-chip--error-dark">Error</span></td>
+            <td>1 week ago</td>
+            <td>J. Torres</td>
+            <td class="de-table__action"><i class="fa-solid fa-pencil"></i></td>
+            <td class="de-table__action"><i class="fa-solid fa-trash-can"></i></td>
+            <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+          </tr>
+          <tr class="is-disabled">
+            <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+            <td class="de-table__checkbox"><i class="fa-duotone fa-regular fa-square"></i></td>
+            <td>Fee Petition</td>
+            <td>Nguyen Trust</td>
+            <td><span class="de-chip de-chip--neutral">Draft</span></td>
+            <td>2 weeks ago</td>
+            <td>V. Li</td>
+            <td class="de-table__action"><i class="fa-solid fa-pencil"></i></td>
+            <td class="de-table__action"><i class="fa-solid fa-trash-can"></i></td>
+            <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ACCORDION
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Accordion</h2>
+    <p class="section-desc">Standalone card per item. Status variants change bg when collapsed; show colored header bar + border when expanded.</p>
+
+    <div class="subsection-title">Default</div>
+    <div class="row" style="align-items:flex-start; flex-wrap:wrap; gap:var(--space-2)">
+      <!-- Default collapsed -->
+      <div class="de-accordion" style="width:220px">
+        <div class="de-accordion__item">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-down"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Default expanded -->
+      <div class="de-accordion" style="width:220px">
+        <div class="de-accordion__item is-open">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-up"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Status variants — collapsed</div>
+    <div class="row" style="align-items:flex-start; flex-wrap:wrap; gap:var(--space-2)">
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--progress">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-down"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--success">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-down"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--error">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-down"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--neutral">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-down"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Status variants — expanded</div>
+    <div class="row" style="align-items:flex-start; flex-wrap:wrap; gap:var(--space-2)">
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--progress is-open">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-up"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--success is-open">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-up"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--error is-open">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-up"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="de-accordion" style="width:180px">
+        <div class="de-accordion__item de-accordion__item--neutral is-open">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left">Accordion</span>
+            <i class="fa-solid fa-angle-up"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection-title" style="margin-top:var(--space-3)">Left icon variant</div>
+    <div class="row" style="align-items:flex-start; flex-wrap:wrap; gap:var(--space-2)">
+      <!-- Left icon collapsed -->
+      <div class="de-accordion" style="width:220px">
+        <div class="de-accordion__item">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left"><i class="fa-solid fa-pencil"></i> Accordion</span>
+            <i class="fa-solid fa-angle-down"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Left icon expanded -->
+      <div class="de-accordion" style="width:220px">
+        <div class="de-accordion__item is-open">
+          <button class="de-accordion__trigger" onclick="toggleAccordion(this)">
+            <span class="de-accordion__trigger-left"><i class="fa-solid fa-pencil"></i> Accordion</span>
+            <i class="fa-solid fa-angle-up"></i>
+          </button>
+          <div class="de-accordion__content">
+            <div class="de-accordion__list-item">
+              <span class="de-accordion__list-item__label">Label</span>
+              <span class="de-accordion__list-item__text">Text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SNACKBARS / ALERTS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Snackbars &amp; Alerts</h2>
+    <p class="section-desc">4 variants: success, warning, error, info.</p>
+    <div class="col" style="max-width:480px;gap:var(--space-1)">
+      <div class="de-snackbar de-snackbar--success">
+        <i class="fa-solid fa-circle-check" style="font-size:20px;flex-shrink:0"></i>
+        Form submitted successfully.
+      </div>
+      <div class="de-snackbar de-snackbar--warning">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:20px;flex-shrink:0"></i>
+        Missing required fields — please review.
+      </div>
+      <div class="de-snackbar de-snackbar--error">
+        <i class="fa-solid fa-circle-xmark" style="font-size:20px;flex-shrink:0"></i>
+        Failed to save. Please try again.
+      </div>
+      <div class="de-snackbar de-snackbar--info">
+        <i class="fa-solid fa-circle-info" style="font-size:20px;flex-shrink:0"></i>
+        Your session expires in 30 minutes.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       STEPPER
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Stepper</h2>
+    <p class="section-desc">Multi-step process indicator. Step 1 = complete (checkmark), Step 2 = active (orange + number), Steps 3–5 = inactive (grey + number).</p>
+    <div class="row">
+      <div class="de-stepper">
+
+        <!-- Step 1: complete -->
+        <div class="de-stepper__step is-complete">
+          <div class="de-stepper__circle"><i class="fa-solid fa-check"></i></div>
+          <div class="de-stepper__label">Client Info</div>
+        </div>
+        <div class="de-stepper__connector"></div>
+
+        <!-- Step 2: active -->
+        <div class="de-stepper__step is-active">
+          <div class="de-stepper__circle">2</div>
+          <div class="de-stepper__label">Matter</div>
+        </div>
+        <div class="de-stepper__connector"></div>
+
+        <!-- Step 3: inactive -->
+        <div class="de-stepper__step">
+          <div class="de-stepper__circle">3</div>
+          <div class="de-stepper__label">Form Details</div>
+        </div>
+        <div class="de-stepper__connector"></div>
+
+        <!-- Step 4: inactive -->
+        <div class="de-stepper__step">
+          <div class="de-stepper__circle">4</div>
+          <div class="de-stepper__label">Review</div>
+        </div>
+        <div class="de-stepper__connector"></div>
+
+        <!-- Step 5: inactive -->
+        <div class="de-stepper__step">
+          <div class="de-stepper__circle">5</div>
+          <div class="de-stepper__label">Submit</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PAGINATION
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Pagination</h2>
+    <p class="section-desc">MUI-style. Nav arrows use 4px radius and go 38% opacity when disabled. Page numbers are circular; active page gets bg-tertiary fill.</p>
+
+    <!-- Default: page 1 of 10, prev/first disabled -->
+    <div class="row" style="align-items:center; flex-wrap:wrap; gap:24px">
+      <div>
+        <p class="section-desc" style="margin-bottom:8px">First page (prev disabled)</p>
+        <div class="de-pagination">
+          <button class="de-pagination__btn" disabled aria-label="First page">
+            <i class="fa-solid fa-backward-step" style="font-size:14px"></i>
+          </button>
+          <button class="de-pagination__btn" disabled aria-label="Previous page">
+            <i class="fa-solid fa-chevron-left" style="font-size:12px"></i>
+          </button>
+          <button class="de-pagination__page is-active" aria-current="page">1</button>
+          <button class="de-pagination__page">2</button>
+          <button class="de-pagination__page">3</button>
+          <button class="de-pagination__page">4</button>
+          <button class="de-pagination__page">5</button>
+          <button class="de-pagination__btn" aria-label="Next page">
+            <i class="fa-solid fa-chevron-right" style="font-size:12px"></i>
+          </button>
+          <button class="de-pagination__btn" aria-label="Last page">
+            <i class="fa-solid fa-forward-step" style="font-size:14px"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mid-page: page 3 of 10 -->
+      <div>
+        <p class="section-desc" style="margin-bottom:8px">Mid page (page 3)</p>
+        <div class="de-pagination">
+          <button class="de-pagination__btn" aria-label="First page">
+            <i class="fa-solid fa-backward-step" style="font-size:14px"></i>
+          </button>
+          <button class="de-pagination__btn" aria-label="Previous page">
+            <i class="fa-solid fa-chevron-left" style="font-size:12px"></i>
+          </button>
+          <button class="de-pagination__page">1</button>
+          <button class="de-pagination__page">2</button>
+          <button class="de-pagination__page is-active" aria-current="page">3</button>
+          <button class="de-pagination__page">4</button>
+          <button class="de-pagination__page">5</button>
+          <button class="de-pagination__btn" aria-label="Next page">
+            <i class="fa-solid fa-chevron-right" style="font-size:12px"></i>
+          </button>
+          <button class="de-pagination__btn" aria-label="Last page">
+            <i class="fa-solid fa-forward-step" style="font-size:14px"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Last page: next/last disabled -->
+      <div>
+        <p class="section-desc" style="margin-bottom:8px">Last page (next disabled)</p>
+        <div class="de-pagination">
+          <button class="de-pagination__btn" aria-label="First page">
+            <i class="fa-solid fa-backward-step" style="font-size:14px"></i>
+          </button>
+          <button class="de-pagination__btn" aria-label="Previous page">
+            <i class="fa-solid fa-chevron-left" style="font-size:12px"></i>
+          </button>
+          <button class="de-pagination__page">1</button>
+          <button class="de-pagination__page">2</button>
+          <button class="de-pagination__page">3</button>
+          <button class="de-pagination__page">4</button>
+          <button class="de-pagination__page is-active" aria-current="page">5</button>
+          <button class="de-pagination__btn" disabled aria-label="Next page">
+            <i class="fa-solid fa-chevron-right" style="font-size:12px"></i>
+          </button>
+          <button class="de-pagination__btn" disabled aria-label="Last page">
+            <i class="fa-solid fa-forward-step" style="font-size:14px"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       RESIZE CONTROL
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Resize Control</h2>
+    <p class="section-desc">Zoom/scale bar. Left pill: minus, orange-dot slider, plus. Right pill: reset icon separated by a divider. Background uses the semi-transparent resize token.</p>
+    <div class="row">
+      <div class="de-resize">
+        <!-- Left: minus — slider — plus -->
+        <div class="de-resize__controls">
+          <button class="de-resize__btn" id="resize-minus" aria-label="Zoom out">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <input class="de-resize__slider" type="range" id="resize-slider" min="0" max="100" value="30" aria-label="Zoom level">
+          <button class="de-resize__btn" id="resize-plus" aria-label="Zoom in">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+        <!-- Right: reset -->
+        <div class="de-resize__reset">
+          <button class="de-resize__btn" id="resize-reset" aria-label="Reset zoom">
+            <i class="fa-solid fa-arrow-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        var slider   = document.getElementById('resize-slider');
+        var btnMinus = document.getElementById('resize-minus');
+        var btnPlus  = document.getElementById('resize-plus');
+        var btnReset = document.getElementById('resize-reset');
+        var DEFAULT  = 30;
+        btnMinus.addEventListener('click', function() {
+          slider.value = Math.max(Number(slider.min), Number(slider.value) - 5);
+        });
+        btnPlus.addEventListener('click', function() {
+          slider.value = Math.min(Number(slider.max), Number(slider.value) + 5);
+        });
+        btnReset.addEventListener('click', function() {
+          slider.value = DEFAULT;
+        });
+      })();
+    </script>
+  </section>
+
+  <!-- ============================================================
+       MENU
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Menu &amp; Dropdown</h2>
+    <p class="section-desc">Contextual menu. Hover uses orange-100 tint, focused state uses geminiOrange.</p>
+    <div class="row" style="align-items:flex-start">
+      <div class="de-menu" style="position:relative">
+        <div class="de-menu__label">Actions</div>
+        <div class="de-menu__item">
+          <i class="fa-solid fa-pencil" style="width:16px;text-align:center"></i>
+          Edit Form
+        </div>
+        <div class="de-menu__item">
+          <i class="fa-regular fa-pen-to-square" style="width:16px;text-align:center"></i>
+          Duplicate
+        </div>
+        <div class="de-menu__item">
+          <i class="fa-duotone fa-solid fa-arrow-down-to-line" style="width:16px;text-align:center"></i>
+          Export
+        </div>
+        <div class="de-menu__divider"></div>
+        <div class="de-menu__item is-focused">
+          <i class="fa-solid fa-trash-can" style="width:16px;text-align:center"></i>
+          Delete
+        </div>
+        <div class="de-menu__item is-disabled">
+          <i class="fa-solid fa-gear" style="width:16px;text-align:center"></i>
+          Lock (disabled)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TOOLTIP
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Tooltip</h2>
+    <p class="section-desc">Hover to reveal. Dark background (#424242), white text.</p>
+    <div class="component-card">
+      <div class="row">
+        <div class="de-tooltip-wrap">
+          <button class="de-btn de-btn--outlined">Hover me</button>
+          <div class="de-tooltip">Opens the form editor</div>
+        </div>
+        <div class="de-tooltip-wrap">
+          <button class="de-btn de-btn--icon de-btn--neutral">
+            <i class="fa-solid fa-circle-info" style="font-size:18px"></i>
+          </button>
+          <div class="de-tooltip">More information</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DROPPAD
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Droppad</h2>
+    <p class="section-desc">File upload drop zone. Blue outline and tinted background.</p>
+    <div class="de-droppad" style="max-width:480px">
+      <i class="de-droppad__icon fa-solid fa-cloud-arrow-up"></i>
+      <div class="de-droppad__text">Drag and drop or <span class="de-droppad__browse">browse</span> to upload a file</div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       AVATARS & BADGES
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Avatars &amp; Badges</h2>
+    <div class="component-card">
+      <div class="subsection-title">Avatars</div>
+      <div class="row" style="align-items:center">
+        <div class="de-avatar de-avatar--sm">JS</div>
+        <div class="de-avatar de-avatar--md">MK</div>
+        <div class="de-avatar de-avatar--lg">AB</div>
+        <div class="de-avatar de-avatar--md" style="background:var(--btn-action-bg)">RL</div>
+        <div class="de-avatar de-avatar--md" style="background:var(--color-grey-600)">DW</div>
+      </div>
+      <div class="subsection-title" style="margin-top:var(--space-2)">Badges</div>
+      <div class="row" style="align-items:center">
+        <span class="de-badge">5</span>
+        <span class="de-badge de-badge--action">12</span>
+        <span class="de-badge de-badge--error">3</span>
+        <span class="de-badge de-badge--neutral">0</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIVIDERS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Dividers</h2>
+    <div class="component-card">
+      <div class="de-body-sm de-text-secondary" style="margin-bottom:var(--space-1)">Default divider</div>
+      <hr class="de-divider" />
+      <div class="de-body-sm de-text-secondary" style="margin-top:var(--space-2);margin-bottom:var(--space-1)">Alt divider</div>
+      <hr class="de-divider de-divider--alt" />
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ICON ACTION BUTTON
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Icon Action Button</h2>
+    <p class="section-desc">MUI IconButton · 36×36 · hover, focus, and click to see states.</p>
+
+    <div class="component-card">
+      <div class="subsection-title">Accent</div>
+      <div class="row" style="margin-bottom:var(--space-3)">
+        <button class="de-icon-btn de-icon-btn--accent"><i class="fa-solid fa-pencil"></i></button>
+        <button class="de-icon-btn de-icon-btn--accent"><i class="fa-solid fa-trash-can"></i></button>
+        <button class="de-icon-btn de-icon-btn--accent"><i class="fa-solid fa-plus"></i></button>
+        <button class="de-icon-btn de-icon-btn--accent"><i class="fa-solid fa-xmark"></i></button>
+        <button class="de-icon-btn de-icon-btn--accent" disabled><i class="fa-solid fa-pencil"></i></button>
+      </div>
+
+      <div class="subsection-title">Action</div>
+      <div class="row" style="margin-bottom:var(--space-3)">
+        <button class="de-icon-btn de-icon-btn--action"><i class="fa-solid fa-trash-can"></i></button>
+        <button class="de-icon-btn de-icon-btn--action"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+        <button class="de-icon-btn de-icon-btn--action"><i class="fa-solid fa-user-plus"></i></button>
+        <button class="de-icon-btn de-icon-btn--action"><i class="fa-solid fa-box-archive"></i></button>
+        <button class="de-icon-btn de-icon-btn--action" disabled><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+
+      <div class="subsection-title">Neutral</div>
+      <div class="row" style="margin-bottom:var(--space-3)">
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-solid fa-bars-filter"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-solid fa-rotate"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-solid fa-clock-rotate-left"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-regular fa-table-columns"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-solid fa-thumbtack"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral"><i class="fa-regular fa-arrow-up-right-and-arrow-down-left-from-center"></i></button>
+        <button class="de-icon-btn de-icon-btn--neutral" disabled><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      </div>
+
+      <div class="subsection-title">Light</div>
+      <div class="row" style="margin-bottom:var(--space-3)">
+        <button class="de-icon-btn de-icon-btn--light"><i class="fa-duotone fa-solid fa-arrow-down-to-line"></i></button>
+        <button class="de-icon-btn de-icon-btn--light"><i class="fa-duotone fa-solid fa-print"></i></button>
+        <button class="de-icon-btn de-icon-btn--light"><i class="fa-duotone fa-solid fa-eye"></i></button>
+        <button class="de-icon-btn de-icon-btn--light"><i class="fa-duotone fa-solid fa-eye-slash"></i></button>
+        <button class="de-icon-btn de-icon-btn--light" disabled><i class="fa-duotone fa-solid fa-arrow-down-to-line"></i></button>
+      </div>
+
+      <div class="subsection-title">Contrast — on coloured background</div>
+      <div class="row" style="background:var(--appbar-gradient);border-radius:var(--radius-md);padding:var(--space-2);gap:var(--space-1)">
+        <button class="de-icon-btn de-icon-btn--contrast"><i class="fa-thin fa-bell"></i></button>
+        <button class="de-icon-btn de-icon-btn--contrast"><i class="fa-solid fa-circle-user"></i></button>
+        <button class="de-icon-btn de-icon-btn--contrast"><i class="fa-solid fa-gear"></i></button>
+        <button class="de-icon-btn de-icon-btn--contrast"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button class="de-icon-btn de-icon-btn--contrast" disabled><i class="fa-thin fa-bell"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ICONS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Icons</h2>
+    <p class="section-desc">Font Awesome Pro · 112 icons · styles: solid, regular, thin, duotone-solid.</p>
+
+    <style>
+      .icon-grid { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+      .icon-item {
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        width: 88px; padding: var(--space-1); border-radius: var(--radius-md);
+        background: var(--bg-primary); border: 1px solid var(--divider);
+        font-size: var(--font-size-xs); color: var(--text-secondary); text-align: center;
+        word-break: break-word;
+      }
+      .icon-item i { font-size: 20px; color: var(--text-primary); min-height: 22px; display: flex; align-items: center; }
+    </style>
+
+    <!-- ACTION -->
+    <div class="subsection-title">Action (35)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-solid fa-pencil"></i>edit</div>
+      <div class="icon-item"><i class="fa-solid fa-ban"></i>cancel</div>
+      <div class="icon-item"><i class="fa-solid fa-trash-can"></i>delete</div>
+      <div class="icon-item"><i class="fa-solid fa-ellipsis-vertical"></i>more</div>
+      <div class="icon-item"><i class="fa-solid fa-arrow-up-right-from-square"></i>open</div>
+      <div class="icon-item"><i class="fa-solid fa-bars-filter"></i>filter</div>
+      <div class="icon-item"><i class="fa-solid fa-xmark"></i>clear</div>
+      <div class="icon-item"><i class="fa-solid fa-rotate"></i>reload</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-eye"></i>show</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-eye-slash"></i>hide</div>
+      <div class="icon-item"><i class="fa-solid fa-power-off"></i>reset</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-arrow-down-to-line"></i>download</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-print"></i>print</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-circle-play"></i>replace</div>
+      <div class="icon-item"><i class="fa-solid fa-user-magnifying-glass"></i>requestReview</div>
+      <div class="icon-item"><i class="fa-solid fa-user-plus"></i>assign</div>
+      <div class="icon-item"><i class="fa-solid fa-user-check"></i>unassign</div>
+      <div class="icon-item"><i class="fa-solid fa-box-archive"></i>archive</div>
+      <div class="icon-item"><i class="fa-regular fa-arrow-up-right-and-arrow-down-left-from-center"></i>expandGrid</div>
+      <div class="icon-item"><i class="fa-regular fa-arrow-down-left-and-arrow-up-right-to-center"></i>collapseGrid</div>
+      <div class="icon-item"><i class="fa-solid fa-angle-left"></i>back</div>
+      <div class="icon-item"><i class="fa-solid fa-angle-right"></i>forward</div>
+      <div class="icon-item"><i class="fa-solid fa-angle-down"></i>expand</div>
+      <div class="icon-item"><i class="fa-solid fa-angle-up"></i>collapse</div>
+      <div class="icon-item"><i class="fa-regular fa-outdent"></i>menuClose</div>
+      <div class="icon-item"><i class="fa-solid fa-clock-rotate-left"></i>activityLog</div>
+      <div class="icon-item"><i class="fa-solid fa-plus"></i>plus</div>
+      <div class="icon-item"><i class="fa-solid fa-minus"></i>minus</div>
+      <div class="icon-item"><i class="fa-solid fa-circle-info"></i>info</div>
+      <div class="icon-item"><i class="fa-solid fa-calendar-day"></i>calendar</div>
+      <div class="icon-item"><i class="fa-solid fa-clock"></i>time</div>
+      <div class="icon-item"><i class="fa-solid fa-cloud-arrow-up"></i>upload</div>
+      <div class="icon-item"><i class="fa-solid fa-triangle-exclamation"></i>warning</div>
+      <div class="icon-item"><i class="fa-solid fa-magnifying-glass"></i>search</div>
+      <div class="icon-item"><i class="fa-solid fa-grip-dots-vertical"></i>move</div>
+    </div>
+
+    <!-- APPBAR / THEME / USER -->
+    <div class="subsection-title">Appbar / Theme / User (37)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-solid fa-bars"></i>menuOpen</div>
+      <div class="icon-item"><i class="fa-solid fa-file-pdf"></i>docPackets</div>
+      <div class="icon-item"><i class="fa-solid fa-sun-bright"></i>lightSelected</div>
+      <div class="icon-item"><i class="fa-regular fa-sun-bright"></i>light</div>
+      <div class="icon-item"><i class="fa-solid fa-moon-stars"></i>darkSelected</div>
+      <div class="icon-item"><i class="fa-regular fa-moon-stars"></i>dark</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-sun"></i>happyLight·sel</div>
+      <div class="icon-item"><i class="fa-regular fa-sun"></i>happyLight</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-cloud-moon"></i>happyDark·sel</div>
+      <div class="icon-item"><i class="fa-regular fa-cloud-moon"></i>happyDark</div>
+      <div class="icon-item"><i class="fa-solid fa-leaf"></i>fallSelected</div>
+      <div class="icon-item"><i class="fa-thin fa-leaf"></i>fall</div>
+      <div class="icon-item"><i class="fa-solid fa-jack-o-lantern"></i>halloween·sel</div>
+      <div class="icon-item"><i class="fa-thin fa-jack-o-lantern"></i>halloween</div>
+      <div class="icon-item"><i class="fa-solid fa-rainbow"></i>rainbow·sel</div>
+      <div class="icon-item"><i class="fa-thin fa-rainbow"></i>rainbow</div>
+      <div class="icon-item"><i class="fa-solid fa-thumbs-up"></i>likeSelected</div>
+      <div class="icon-item"><i class="fa-regular fa-thumbs-up"></i>like</div>
+      <div class="icon-item"><i class="fa-solid fa-thumbs-down"></i>dislike·sel</div>
+      <div class="icon-item"><i class="fa-thin fa-thumbs-down"></i>dislike</div>
+      <div class="icon-item"><i class="fa-solid fa-bell"></i>notif·sel</div>
+      <div class="icon-item"><i class="fa-thin fa-bell"></i>notification</div>
+      <div class="icon-item"><i class="fa-solid fa-user"></i>userSelected</div>
+      <div class="icon-item"><i class="fa-thin fa-user"></i>user</div>
+      <div class="icon-item"><i class="fa-solid fa-circle-user"></i>profile</div>
+      <div class="icon-item"><i class="fa-solid fa-gear"></i>setting</div>
+      <div class="icon-item"><i class="fa-solid fa-right-from-bracket"></i>logout</div>
+      <div class="icon-item"><i class="fa-solid fa-house"></i>home</div>
+      <div class="icon-item"><i class="fa-solid fa-hammer"></i>build</div>
+      <div class="icon-item"><i class="fa-solid fa-user-secret"></i>secretAgent·sel</div>
+      <div class="icon-item"><i class="fa-thin fa-user-secret"></i>secretAgent</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-user-check"></i>normalUser·sel</div>
+      <div class="icon-item"><i class="fa-thin fa-user-check"></i>normalUser</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-user-minus"></i>powerless·sel</div>
+      <div class="icon-item"><i class="fa-thin fa-user-minus"></i>powerlessUser</div>
+      <div class="icon-item"><i class="fa-solid fa-masks-theater"></i>becomeUser</div>
+      <div class="icon-item"><i class="fa-solid fa-user-bounty-hunter"></i>advancedUser</div>
+    </div>
+
+    <!-- DATAGRID HEADER -->
+    <div class="subsection-title">Datagrid Header (7)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-solid fa-arrow-up"></i>sortAsc</div>
+      <div class="icon-item"><i class="fa-solid fa-arrow-down"></i>sortDesc</div>
+      <div class="icon-item"><i class="fa-solid fa-thumbtack"></i>pin</div>
+      <div class="icon-item"><i class="fa-solid fa-thumbtack-slash"></i>unpin</div>
+      <div class="icon-item"><i class="fa-solid fa-filter"></i>filterHeader</div>
+      <div class="icon-item"><i class="fa-solid fa-eye-slash"></i>hideColumn</div>
+      <div class="icon-item"><i class="fa-regular fa-table-columns"></i>manageCol</div>
+    </div>
+
+    <!-- FEE METHOD / PAYMENT -->
+    <div class="subsection-title">Fee Method / Payment (6)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-regular fa-money-check"></i>check</div>
+      <div class="icon-item"><i class="fa-solid fa-sack-dollar"></i>cash</div>
+      <div class="icon-item"><i class="fa-duotone fa-solid fa-credit-card"></i>creditCard</div>
+      <div class="icon-item"><i class="fa-regular fa-money-check-dollar-pen"></i>handCheck</div>
+      <div class="icon-item"><i class="fa-solid fa-money-check"></i>checkVerify</div>
+      <div class="icon-item"><i class="fa-solid fa-circle-xmark"></i>checkVoid</div>
+    </div>
+
+    <!-- CHECKBOX -->
+    <div class="subsection-title">Checkbox (4)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-regular fa-square"></i>unchecked</div>
+      <div class="icon-item"><i class="fa-solid fa-square-check"></i>checked</div>
+      <div class="icon-item"><i class="fa-solid fa-square-minus"></i>indeterminate</div>
+      <div class="icon-item"><i class="fa-duotone fa-regular fa-square"></i>disabled</div>
+    </div>
+
+    <!-- TEXT FIELD -->
+    <div class="subsection-title">Text Field (2)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-solid fa-caret-down"></i>expand</div>
+      <div class="icon-item"><i class="fa-solid fa-caret-up"></i>collapse</div>
+    </div>
+
+    <!-- OTHER -->
+    <div class="subsection-title">Other (7)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-solid fa-circle-check"></i>complete</div>
+      <div class="icon-item"><i class="fa-regular fa-star"></i>star</div>
+      <div class="icon-item"><i class="fa-solid fa-star"></i>starSelected</div>
+      <div class="icon-item"><i class="fa-regular fa-arrow-left"></i>return</div>
+      <div class="icon-item"><i class="fa-solid fa-loader"></i>saving</div>
+      <div class="icon-item"><i class="fa-solid fa-angles-up-down"></i>position</div>
+      <div class="icon-item"><i class="fa-regular fa-pen-to-square"></i>editing</div>
+    </div>
+
+    <!-- MATTERS / FORMS -->
+    <div class="subsection-title">Matters (4)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-regular fa-suitcase"></i>case</div>
+      <div class="icon-item"><i class="fa-regular fa-calendar"></i>date</div>
+      <div class="icon-item"><i class="fa-regular fa-user"></i>client</div>
+      <div class="icon-item"><i class="fa-regular fa-landmark"></i>court</div>
+    </div>
+
+    <!-- EDITOR / FORMS -->
+    <div class="subsection-title">Editor / Forms (10)</div>
+    <div class="icon-grid">
+      <div class="icon-item"><i class="fa-solid fa-comment"></i>comment</div>
+      <div class="icon-item"><i class="fa-solid fa-square-list"></i>template</div>
+      <div class="icon-item"><i class="fa-solid fa-copy"></i>duplicate</div>
+      <div class="icon-item"><i class="fa-solid fa-file-circle-plus"></i>addToGroup</div>
+      <div class="icon-item"><i class="fa-solid fa-print"></i>print</div>
+      <div class="icon-item"><i class="fa-solid fa-down-to-line"></i>download</div>
+      <div class="icon-item"><i class="fa-solid fa-square"></i>draw</div>
+      <div class="icon-item"><i class="fa-solid fa-rotate-right"></i>rotate</div>
+      <div class="icon-item"><i class="fa-solid fa-move"></i>move</div>
+      <div class="icon-item"><i class="fa-solid fa-input-text"></i>rename</div>
+    </div>
+  </section>
+
+</div><!-- /showcase -->
+
+<script>
+  // ── Appbar responsive collapse ───────────────────────────────
+  document.querySelectorAll('.de-appbar').forEach(function(bar) {
+    var logo    = bar.querySelector('.de-appbar__logo');
+    var nav     = bar.querySelector('.de-appbar__nav');
+    var actions = bar.querySelector('.de-appbar__actions');
+    var hamburger = bar.querySelector('.de-appbar__hamburger');
+    var menu    = bar.querySelector('.de-appbar__mobile-menu');
+    if (!logo || !nav || !actions) return;
+
+    function check() {
+      // Temporarily show nav to measure it
+      var wasCollapsed = bar.classList.contains('is-collapsed');
+      if (wasCollapsed) {
+        bar.classList.remove('is-collapsed');
+        nav.style.visibility = 'hidden';
+      }
+
+      var logoRect    = logo.getBoundingClientRect();
+      var navRect     = nav.getBoundingClientRect();
+      var actionsRect = actions.getBoundingClientRect();
+
+      var gapLeft  = navRect.left - logoRect.right;
+      var gapRight = actionsRect.left - navRect.right;
+
+      if (wasCollapsed) {
+        bar.classList.add('is-collapsed');
+        nav.style.visibility = '';
+      }
+
+      var shouldCollapse = gapLeft < 40 || gapRight < 40;
+      bar.classList.toggle('is-collapsed', shouldCollapse);
+      if (!shouldCollapse) bar.classList.remove('is-menu-open');
+    }
+
+    var ro = new ResizeObserver(check);
+    ro.observe(bar);
+    check();
+
+    var backdrop = bar.querySelector('.de-appbar__mobile-backdrop');
+
+    if (hamburger && menu) {
+      function positionMenu() {
+        var rect = bar.getBoundingClientRect();
+        menu.style.top     = rect.bottom + 'px';
+        if (backdrop) {
+          backdrop.style.top = rect.bottom + 'px';
+        }
+      }
+
+      function closeMenu() { bar.classList.remove('is-menu-open'); updateHamburgerIcon(); }
+
+      function updateHamburgerIcon() {
+        var icon = hamburger.querySelector('i');
+        if (bar.classList.contains('is-menu-open')) {
+          icon.className = 'fa-solid fa-xmark';
+        } else {
+          icon.className = 'fa-solid fa-bars';
+        }
+      }
+
+      hamburger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = bar.classList.toggle('is-menu-open');
+        if (isOpen) positionMenu();
+        updateHamburgerIcon();
+      });
+
+      if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeMenu();
+      });
+
+      window.addEventListener('resize', function() {
+        if (bar.classList.contains('is-menu-open')) positionMenu();
+      });
+    }
+  });
+
+  // ── Search ───────────────────────────────────────────────────
+  document.querySelectorAll('.de-search').forEach(function(wrap) {
+    var input = wrap.querySelector('.de-search__input');
+    var clear = wrap.querySelector('.de-search__clear');
+    if (!input || !clear) return;
+
+    function update() {
+      wrap.classList.toggle('de-search--has-value', input.value.length > 0);
+    }
+
+    input.addEventListener('input', update);
+
+    clear.addEventListener('click', function() {
+      input.value = '';
+      update();
+      input.focus();
+    });
+
+    update();
+  });
+
+  // ── Multiselect ──────────────────────────────────────────────
+  (function() {
+    var field    = document.getElementById('ms-field');
+    var dropdown = document.getElementById('ms-dropdown');
+    var chips    = document.getElementById('ms-chips');
+    var clearBtn = document.getElementById('ms-clear');
+    var caret    = document.getElementById('ms-caret');
+    var label    = document.getElementById('ms-label');
+    if (!field) return;
+
+    var selected = [];
+
+    function renderChips() {
+      chips.innerHTML = '';
+      selected.forEach(function(val) {
+        var chip = document.createElement('span');
+        chip.className = 'de-multiselect__chip';
+        chip.innerHTML = val + '<button class="de-multiselect__chip-delete" aria-label="Remove"><i class="fa-solid fa-circle-xmark"></i></button>';
+        chip.querySelector('button').addEventListener('mousedown', function(e) {
+          e.stopPropagation();
+          removeOption(val);
+        });
+        chips.appendChild(chip);
+      });
+      clearBtn.style.display = selected.length ? '' : 'none';
+    }
+
+    function removeOption(val) {
+      selected = selected.filter(function(v) { return v !== val; });
+      var opt = dropdown.querySelector('[data-value="' + val + '"]');
+      if (opt) opt.classList.remove('is-selected');
+      renderChips();
+    }
+
+    function open() {
+      dropdown.style.display = 'block';
+      field.classList.add('is-focused');
+      field.setAttribute('aria-expanded', 'true');
+      caret.innerHTML = '<i class="fa-solid fa-caret-up"></i>';
+      if (label) label.style.color = 'var(--input-focused)';
+    }
+
+    function close() {
+      dropdown.style.display = 'none';
+      field.classList.remove('is-focused');
+      field.setAttribute('aria-expanded', 'false');
+      caret.innerHTML = '<i class="fa-solid fa-caret-down"></i>';
+      if (label) label.style.color = '';
+    }
+
+    field.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.de-multiselect__chip-delete')) return;
+      if (e.target.closest('.de-multiselect__clear')) return;
+      e.preventDefault();
+      dropdown.style.display === 'none' ? open() : close();
+      field.focus();
+    });
+
+    dropdown.addEventListener('mousedown', function(e) {
+      var opt = e.target.closest('.de-multiselect__option');
+      if (!opt) return;
+      e.preventDefault();
+      var val = opt.dataset.value;
+      if (opt.classList.contains('is-selected')) {
+        removeOption(val);
+      } else {
+        selected.push(val);
+        opt.classList.add('is-selected');
+        renderChips();
+      }
+    });
+
+    clearBtn.addEventListener('mousedown', function(e) {
+      e.stopPropagation();
+      selected = [];
+      dropdown.querySelectorAll('.de-multiselect__option').forEach(function(o) { o.classList.remove('is-selected'); });
+      renderChips();
+    });
+
+    document.addEventListener('mousedown', function(e) {
+      if (!field.closest('.de-multiselect-wrap').contains(e.target)) close();
+    });
+
+    field.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') close();
+    });
+  })();
+
+  // Checkbox — icon swap + is-checked class
+  document.addEventListener('change', function(e) {
+    if (!e.target.matches('.de-checkbox__input')) return;
+    const label = e.target.closest('.de-checkbox');
+    const icon  = label.querySelector('.de-checkbox__ripple i');
+    if (!icon || label.classList.contains('de-checkbox--indeterminate')) return;
+    if (e.target.checked) {
+      icon.className = 'fa-solid fa-square-check';
+      label.classList.add('is-checked');
+    } else {
+      icon.className = 'fa-regular fa-square';
+      label.classList.remove('is-checked');
+    }
+  });
+
+  document.addEventListener('mousedown', function(e) {
+    const label = e.target.closest('.de-checkbox');
+    if (label) {
+      const rippleEl = label.querySelector('.de-checkbox__ripple');
+      if (!rippleEl) return;
+      const input = label.querySelector('.de-checkbox__input');
+      if (input?.disabled) return;
+      const rect = rippleEl.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const dot  = document.createElement('span');
+      dot.className = 'de-checkbox__ripple-dot';
+      dot.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+      rippleEl.appendChild(dot);
+      dot.addEventListener('animationend', () => dot.remove());
+      return;
+    }
+
+    // icon button ripple
+    const iconBtn = e.target.closest('.de-icon-btn');
+    const btn     = e.target.closest('.de-btn');
+
+    if (iconBtn && !iconBtn.disabled) {
+      const rect = iconBtn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const ripple = document.createElement('span');
+      ripple.className = 'de-icon-btn__ripple';
+      ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+      iconBtn.appendChild(ripple);
+      ripple.addEventListener('animationend', () => ripple.remove());
+      return;
+    }
+
+    if (btn && !btn.disabled) {
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 2;
+      const ripple = document.createElement('span');
+      ripple.className = 'de-btn__ripple';
+      ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+      btn.appendChild(ripple);
+      ripple.addEventListener('animationend', () => ripple.remove());
+    }
+  });
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
+    const icon = document.getElementById('theme-icon');
+    icon.className = isDark ? 'fa-solid fa-sun-bright' : 'fa-solid fa-moon-stars';
+    icon.style.fontSize = '14px';
+  }
+
+  function toggleAccordion(trigger) {
+    const item = trigger.closest('.de-accordion__item');
+    item.classList.toggle('is-open');
+    const icon = trigger.querySelector('i.fa-angle-down, i.fa-angle-up');
+    if (icon) {
+      icon.className = item.classList.contains('is-open') ? 'fa-solid fa-angle-up' : 'fa-solid fa-angle-down';
+    }
+  }
+
+  // ── Custom select dropdowns ──────────────────────────────────
+  document.querySelectorAll('.de-custom-select').forEach(wrap => {
+    const trigger = wrap.querySelector('.de-select-trigger');
+    const dropdown = wrap.querySelector('.de-select-dropdown');
+    const caret = wrap.querySelector('.de-select-trigger__caret');
+    if (!trigger || !dropdown) return;
+
+    trigger.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = wrap.classList.contains('is-open');
+      // close all others
+      document.querySelectorAll('.de-custom-select.is-open').forEach(w => {
+        w.classList.remove('is-open');
+        const c = w.querySelector('.de-select-trigger__caret');
+        if (c) { c.classList.replace('fa-caret-up', 'fa-caret-down'); }
+      });
+      if (!isOpen) {
+        wrap.classList.add('is-open');
+        if (caret) { caret.classList.replace('fa-caret-down', 'fa-caret-up'); }
+      }
+    });
+
+    dropdown.querySelectorAll('.de-select-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        trigger.childNodes[0].textContent = opt.textContent.trim() + ' ';
+        trigger.removeAttribute('data-empty');
+        dropdown.querySelectorAll('.de-select-option').forEach(o => o.classList.remove('is-selected'));
+        opt.classList.add('is-selected');
+        wrap.classList.remove('is-open');
+        if (caret) { caret.classList.replace('fa-caret-up', 'fa-caret-down'); }
+      });
+    });
+  });
+
+  // close on outside click
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.de-custom-select.is-open').forEach(wrap => {
+      wrap.classList.remove('is-open');
+      const c = wrap.querySelector('.de-select-trigger__caret');
+      if (c) { c.classList.replace('fa-caret-up', 'fa-caret-down'); }
+    });
+  });
+</script>
+</body>
+</html>

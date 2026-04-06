@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DraftEngine — Dashboard</title>
+
+  <link rel="stylesheet" href="../design-system/tokens.css" />
+  <link rel="stylesheet" href="../design-system/components.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/32dfe1c9ba.js" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+
+
+    /* Page container */
+    .page {
+      position: relative;
+      z-index: 1;
+      padding: 40px 80px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* Notifications section wrapper */
+    .notifications-panel {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      box-shadow: 0 1px 10px rgba(0,0,0,.12), 0 4px 5px rgba(0,0,0,.14), 0 2px 4px rgba(0,0,0,.2);
+    }
+
+    /* Grid toolbar */
+    .grid-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-1);
+      min-height: 36px;
+    }
+    .grid-toolbar__left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .grid-toolbar__icon {
+      color: var(--text-action);
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .grid-toolbar__divider {
+      width: 1px;
+      height: 20px;
+      background: var(--divider);
+    }
+    .grid-toolbar__right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .grid-toolbar__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      background: none;
+      border: none;
+      color: var(--text-action);
+      font-family: var(--font-family);
+      font-size: var(--font-size-body1);
+      font-weight: var(--font-weight-bold);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    .grid-toolbar__btn:hover { background: rgba(0,113,255,0.08); }
+
+    /* Table column hints */
+    .de-table .col-priority { width: 80px; padding-left: 0; }
+    .de-table tbody tr.is-dragging { opacity: 0.35; }
+    .de-table tbody tr.drag-over td { background: var(--grid-selected-bg); }
+    .de-table .col-desc { width: 400px; white-space: normal; }
+    .de-table td.de-table__drag { cursor: grab; }
+    .de-table td.de-table__drag:active { cursor: grabbing; }
+
+    /* Current Matters section */
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: var(--space-2);
+    }
+    .section-header__left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .section-title {
+      font-size: var(--font-size-lg); /* 20px */
+      font-weight: var(--font-weight-regular);
+      color: var(--text-primary);
+    }
+
+    /* 2-column matter cards grid */
+    .matters-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+
+    /* Override de-card__header-left to stack vertically for matter cards */
+    .matter-card .de-card__header-left {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-1);
+    }
+    .matter-card__title-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .matter-card__details {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .matter-card__detail {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--font-size-body2); /* 14px */
+      color: var(--text-primary);
+    }
+    .matter-card__detail i { font-size: 13px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ APPBAR ═══════════════════════════════════════════════ -->
+  <header class="de-appbar" id="main-appbar">
+
+    <a class="de-appbar__logo" href="#">
+      <img src="../assets/logo.png" alt="DraftEngine" />
+    </a>
+
+    <nav class="de-appbar__nav">
+      <a class="de-appbar__nav-item is-active" href="#">Dashboard</a>
+      <a class="de-appbar__nav-item" href="#">Matters</a>
+      <a class="de-appbar__nav-item" href="#">Forms</a>
+      <a class="de-appbar__nav-item" href="#">Settings</a>
+    </nav>
+
+    <div class="de-appbar__actions">
+      <button class="de-appbar__icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()"><i id="theme-icon" class="fa-solid fa-sun-bright"></i></button>
+      <button class="de-appbar__icon-btn" title="Favorites"><i class="fa-regular fa-thumbs-up"></i></button>
+      <button class="de-appbar__icon-btn" title="Account"><i class="fa-regular fa-user"></i></button>
+      <button class="de-appbar__hamburger" aria-label="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+
+    <div class="de-appbar__mobile-menu">
+      <a class="de-appbar__mobile-item is-active" href="#">Dashboard</a>
+      <a class="de-appbar__mobile-item" href="#">Matters</a>
+      <a class="de-appbar__mobile-item" href="#">Forms</a>
+      <a class="de-appbar__mobile-item" href="#">Settings</a>
+    </div>
+    <div class="de-appbar__mobile-backdrop"></div>
+  </header>
+  <div class="de-appbar__divider"></div>
+
+  <!-- ═══ PAGE ════════════════════════════════════════════════ -->
+  <main class="page">
+
+    <!-- ── Notifications ──────────────────────────────────── -->
+    <div class="notifications-panel">
+
+      <!-- Toolbar -->
+      <div class="grid-toolbar">
+        <div class="grid-toolbar__left">
+          <i class="fa-duotone fa-solid fa-eye grid-toolbar__icon" title="Show/Hide columns"></i>
+          <i class="fa-solid fa-filter grid-toolbar__icon" title="Filter"></i>
+          <span class="grid-toolbar__divider"></span>
+          <i class="fa-regular fa-table-columns grid-toolbar__icon" title="Manage columns"></i>
+        </div>
+        <div class="grid-toolbar__right">
+          <button class="grid-toolbar__btn">
+            <i class="fa-solid fa-down-to-line"></i> Export
+          </button>
+          <button class="grid-toolbar__btn">
+            <i class="fa-solid fa-rotate"></i> Reload
+          </button>
+        </div>
+      </div>
+
+      <!-- Data table -->
+      <div class="de-table-wrap">
+        <table class="de-table">
+          <thead>
+            <tr>
+              <th class="de-table__drag"></th>
+              <th class="col-priority"></th>
+              <th>Deadline</th>
+              <th>Date Posted</th>
+              <th>Status</th>
+              <th class="col-desc">Description</th>
+              <th>Posted By</th>
+              <th class="de-table__more"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"><span class="de-chip de-chip--error-dark">Rush</span></td>
+              <td>11/25/2025</td>
+              <td>11/01/2025</td>
+              <td>Action required</td>
+              <td class="col-desc">You have Packet PLD-PI-001 to complete for Gonzalez v. Wilson.</td>
+              <td>Jennifer Li</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"><span class="de-chip de-chip--error-dark">Rush</span></td>
+              <td>11/30/2025</td>
+              <td>11/01/2025</td>
+              <td>Action required</td>
+              <td class="col-desc">You have Packet A to complete for Bond v. Silva.</td>
+              <td>Paul Stafford</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"></td>
+              <td>12/01/2025</td>
+              <td>11/01/2025</td>
+              <td>Action required</td>
+              <td class="col-desc">You have Packet SUM-100 to complete for Gonzalez v. Wilson.</td>
+              <td>Tracey Baggins</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"></td>
+              <td>12/10/2024</td>
+              <td>12/05/2024</td>
+              <td>Action required</td>
+              <td class="col-desc">Packet 10 needs an update for Bond v. Silva.</td>
+              <td>Paul Stafford</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"></td>
+              <td>—</td>
+              <td>12/07/2025</td>
+              <td>Status update</td>
+              <td class="col-desc">Packet 20 has been approved for Mann v. Borge.</td>
+              <td>Jennifer Li</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"></td>
+              <td>—</td>
+              <td>12/06/2025</td>
+              <td>Status update</td>
+              <td class="col-desc">Packet 100 has been approved for Bond v. Silva.</td>
+              <td>Tracey Baggins</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"></td>
+              <td>—</td>
+              <td>12/05/2025</td>
+              <td>Status update</td>
+              <td class="col-desc">Packet 300 has been approved for Mann v. Borge.</td>
+              <td>Jennifer Li</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr>
+              <td class="de-table__drag"><i class="fa-solid fa-grip-dots-vertical"></i></td>
+              <td class="col-priority"></td>
+              <td>—</td>
+              <td>12/04/2025</td>
+              <td>Status update</td>
+              <td class="col-desc">Packet 100 has been approved for Bond v. Silva.</td>
+              <td>Jennifer Li</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Current Matters ───────────────────────────────── -->
+    <section>
+      <div class="section-header">
+        <div class="section-header__left">
+          <h2 class="section-title">Current Matters</h2>
+          <span class="de-chip de-chip--neutral" style="gap:8px; cursor:pointer; padding: 4px 8px;">
+            Sort by <i class="fa-solid fa-caret-down"></i>
+          </span>
+        </div>
+        <div class="de-search" style="width: 200px; flex-shrink: 0;">
+          <div class="de-search__field">
+            <i class="fa-solid fa-magnifying-glass de-search__icon"></i>
+            <input class="de-search__input" type="text" placeholder="Search Matter" id="matter-search" />
+            <button class="de-search__clear" aria-label="Clear search">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="matters-grid">
+
+        <!-- Matter card 1: Pitt v. Jolie -->
+        <div class="de-card matter-card">
+          <div class="de-card__header">
+            <div class="de-card__header-left">
+              <div class="matter-card__title-row">
+                <span class="de-card__title">Pitt v. Jolie</span>
+                <span class="de-chip de-chip--complete-dark">Active</span>
+              </div>
+              <div class="matter-card__details">
+                <span class="matter-card__detail">
+                  <i class="fa-regular fa-suitcase"></i> Case No: 24FAM01234
+                </span>
+                <span class="matter-card__detail">
+                  <i class="fa-regular fa-calendar"></i> Filed on: 09/02/2026
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="de-card__row">
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Discovery Response Due</span>
+              <span class="de-card__row-secondary">Due 09/02/2026 · Interrogatories</span>
+            </div>
+          </div>
+          <div class="de-card__row">
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Motion Hearing</span>
+              <span class="de-card__row-secondary">Due 09/03/2026 · Summary Judgement</span>
+            </div>
+          </div>
+          <div class="de-card__row">
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Expert Witness Deadline</span>
+              <span class="de-card__row-secondary">Due 09/04/2026 · Technical Expert</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matter card 2: Smith v. Johnson -->
+        <div class="de-card matter-card">
+          <div class="de-card__header">
+            <div class="de-card__header-left">
+              <div class="matter-card__title-row">
+                <span class="de-card__title">Smith v. Johnson</span>
+                <span class="de-chip de-chip--progress-dark">In Progress</span>
+              </div>
+              <div class="matter-card__details">
+                <span class="matter-card__detail">
+                  <i class="fa-regular fa-suitcase"></i> Case No: 25CIV00876
+                </span>
+                <span class="matter-card__detail">
+                  <i class="fa-regular fa-calendar"></i> Filed on: 03/14/2026
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="de-card__row">
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Deposition Scheduled</span>
+              <span class="de-card__row-secondary">Due 09/10/2026 · Plaintiff Deposition</span>
+            </div>
+          </div>
+          <div class="de-card__row">
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Settlement Conference</span>
+              <span class="de-card__row-secondary">Due 09/15/2026 · Mediation Session</span>
+            </div>
+          </div>
+          <div class="de-card__row">
+            <div class="de-card__row-text">
+              <span class="de-card__row-primary">Trial Preparation Filing</span>
+              <span class="de-card__row-secondary">Due 09/22/2026 · Pre-Trial Brief</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+<script>
+  /* ── Theme toggle ────────────────────────────────────── */
+  function toggleTheme() {
+    var html   = document.documentElement;
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    var icon = document.getElementById('theme-icon');
+    icon.className = isDark ? 'fa-solid fa-moon-stars' : 'fa-solid fa-sun-bright';
+  }
+
+  /* ── Search clear button ─────────────────────────────── */
+  (function() {
+    var wrap  = document.querySelector('.de-search');
+    var input = document.getElementById('matter-search');
+    var clear = wrap.querySelector('.de-search__clear');
+    function update() { wrap.classList.toggle('de-search--has-value', input.value.length > 0); }
+    input.addEventListener('input', update);
+    clear.addEventListener('click', function() { input.value = ''; update(); input.focus(); });
+    update();
+  })();
+
+  /* ── Row drag-to-reorder ────────────────────────────── */
+  (function() {
+    var tbody   = document.querySelector('.de-table tbody');
+    var dragging = null;
+
+    // Only make a row draggable when the mousedown is on the handle cell
+    tbody.addEventListener('mousedown', function(e) {
+      var row = e.target.closest('tr');
+      if (!row) return;
+      row.draggable = !!e.target.closest('.de-table__drag');
+    });
+
+    tbody.addEventListener('dragstart', function(e) {
+      var row = e.target.closest('tr');
+      if (!row) return;
+      dragging = row;
+      row.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    tbody.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      var row = e.target.closest('tr');
+      if (!row || row === dragging) return;
+      tbody.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      row.classList.add('drag-over');
+    });
+
+    tbody.addEventListener('dragleave', function(e) {
+      if (!tbody.contains(e.relatedTarget)) {
+        tbody.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      }
+    });
+
+    tbody.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var target = e.target.closest('tr');
+      if (!target || target === dragging) return;
+      var rows    = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+      var fromIdx = rows.indexOf(dragging);
+      var toIdx   = rows.indexOf(target);
+      if (fromIdx < toIdx) { target.after(dragging); } else { target.before(dragging); }
+    });
+
+    tbody.addEventListener('dragend', function() {
+      if (dragging) { dragging.classList.remove('is-dragging'); dragging.draggable = false; }
+      tbody.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      dragging = null;
+    });
+  })();
+
+  /* ── Appbar hamburger ────────────────────────────────── */
+  (function() {
+    var bar       = document.getElementById('main-appbar');
+    var logo      = bar.querySelector('.de-appbar__logo');
+    var nav       = bar.querySelector('.de-appbar__nav');
+    var actions   = bar.querySelector('.de-appbar__actions');
+    var hamburger = bar.querySelector('.de-appbar__hamburger');
+    var menu      = bar.querySelector('.de-appbar__mobile-menu');
+    var backdrop  = bar.querySelector('.de-appbar__mobile-backdrop');
+
+    function check() {
+      var wasCollapsed = bar.classList.contains('is-collapsed');
+      if (wasCollapsed) { bar.classList.remove('is-collapsed'); nav.style.visibility = 'hidden'; }
+
+      var logoRect    = logo.getBoundingClientRect();
+      var navRect     = nav.getBoundingClientRect();
+      var actionsRect = actions.getBoundingClientRect();
+      var gapLeft     = navRect.left - logoRect.right;
+      var gapRight    = actionsRect.left - navRect.right;
+
+      if (wasCollapsed) { bar.classList.add('is-collapsed'); nav.style.visibility = ''; }
+
+      var shouldCollapse = gapLeft < 40 || gapRight < 40;
+      bar.classList.toggle('is-collapsed', shouldCollapse);
+      if (!shouldCollapse) bar.classList.remove('is-menu-open');
+    }
+
+    function positionMenu() {
+      var rect = bar.getBoundingClientRect();
+      menu.style.top     = rect.bottom + 'px';
+      backdrop.style.top = rect.bottom + 'px';
+    }
+
+    function updateHamburgerIcon() {
+      var icon = hamburger.querySelector('i');
+      icon.className = bar.classList.contains('is-menu-open') ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+    }
+
+    function closeMenu() { bar.classList.remove('is-menu-open'); updateHamburgerIcon(); }
+
+    hamburger.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = bar.classList.toggle('is-menu-open');
+      if (isOpen) positionMenu();
+      updateHamburgerIcon();
+    });
+
+    backdrop.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMenu(); });
+
+    var ro = new ResizeObserver(check);
+    ro.observe(bar);
+    check();
+
+    window.addEventListener('resize', function() {
+      if (bar.classList.contains('is-menu-open')) positionMenu();
+    });
+  })();
+</script>
+</body>
+</html>

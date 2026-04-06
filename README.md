@@ -1,6 +1,6 @@
-# DraftEngine — Vera
+# Gemini — Vera
 
-UI prototype built with pure HTML, CSS, and vanilla JS. No build tools or dependencies.
+UI prototypes built with pure HTML, CSS, and vanilla JS. No build tools or dependencies.
 
 ---
 
@@ -8,8 +8,9 @@ UI prototype built with pure HTML, CSS, and vanilla JS. No build tools or depend
 
 | | |
 |---|---|
-| **Dashboard** | https://vli-gemini.github.io/draftengine/app/dashboard.html |
-| **Design System** | https://vli-gemini.github.io/draftengine/design-system/index.html |
+| **DraftEngine Dashboard** | https://vli-gemini.github.io/gemini-vera/draftengine/dashboard.html |
+| **Orange Screen** | https://vli-gemini.github.io/gemini-vera/orange-screen/index.html |
+| **Design System** | https://vli-gemini.github.io/gemini-vera/design-system/index.html |
 
 ---
 
@@ -20,20 +21,22 @@ cd "draftengine - vera"
 python3 -m http.server 3001
 ```
 
-Then open `http://localhost:3001/app/dashboard.html`
-
 ---
 
 ## File structure
 
 ```
-draftengine - vera/
+gemini-vera/
 ├── design-system/
 │   ├── index.html       # Component showcase
 │   ├── tokens.css       # Design tokens (light + dark)
 │   └── components.css   # Component styles (.de- prefix)
-└── app/
-    └── dashboard.html   # Main app UI
+├── draftengine/
+│   └── dashboard.html   # DraftEngine app
+├── orange-screen/
+│   └── index.html       # Orange Screen app
+└── assets/
+    └── logo.png
 ```
 
 ## Tech
@@ -42,3 +45,4 @@ draftengine - vera/
 - **Font Awesome Pro** — via kit (company account required)
 - **Fira Sans** — Google Fonts
 - Light/dark mode via `data-theme` on `<html>`
+- Shared design system used across all apps

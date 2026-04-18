@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini — IMR Applications</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/32dfe1c9ba.js" crossorigin="anonymous"></script>
+
+  <style>
+    /* ── Design tokens (dark) ─────────────────────────────────────── */
+    :root {
+      --orange:          #DA8427;
+      --orange-light:    #E19C52;
+      --blue:            #0071FF;
+
+      --grey-0:   #FFFFFF;
+      --grey-400: #A1A1A1;
+      --grey-500: #979797;
+      --grey-600: #424242;
+      --grey-700: #363636;
+      --grey-800: #212121;
+      --grey-900: #121212;
+
+      --green-300: #81C784;
+      --red-300:   #E57373;
+
+      --radius-sm:   4px;
+      --radius-md:   8px;
+      --radius-card: 8px;
+
+      --font:        'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --fw-regular:  400;
+      --fw-semibold: 600;
+      --fw-bold:     700;
+
+      --bg-default:  #121212;
+      --bg-paper:    #1E1E1E;
+      --bg-filled:   #212121;
+
+      --text-primary:   #FFFFFF;
+      --text-secondary: #A1A1A1;
+      --text-disabled:  #979797;
+
+      --divider:    #424242;
+      --appbar-bg:  #1A1A1A;
+      --sidebar-bg: #1A1A1A;
+    }
+
+    /* ── Reset ────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-default);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Appbar ───────────────────────────────────────────────────── */
+    .appbar {
+      display: flex;
+      align-items: center;
+      height: 56px;
+      padding: 0 20px 0 16px;
+      background: var(--appbar-bg);
+      border-bottom: 1px solid var(--divider);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      flex-shrink: 0;
+      gap: 8px;
+    }
+    .appbar__menu-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      border: none; background: none;
+      color: var(--orange); font-size: 18px; cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background 150ms ease;
+      flex-shrink: 0;
+    }
+    .appbar__menu-btn:hover { background: rgba(218,132,39,0.12); }
+    .appbar__title {
+      font-size: 18px;
+      font-weight: var(--fw-bold);
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .appbar__icon-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      border: none; background: none;
+      color: var(--grey-500); font-size: 16px; cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .appbar__icon-btn:hover { background: rgba(255,255,255,0.08); color: #FFF; }
+
+    /* ── App shell ────────────────────────────────────────────────── */
+    .app-shell {
+      display: flex;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────────────── */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      height: 100%;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--divider);
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      transition: width 200ms ease, min-width 200ms ease, opacity 200ms ease;
+    }
+    .sidebar.is-collapsed {
+      width: 0;
+      min-width: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--grey-700); border-radius: 2px; }
+
+    .sidebar__logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--divider);
+      flex-shrink: 0;
+    }
+    .sidebar__logo img { height: 22px; width: auto; display: block; }
+    .sidebar__logo-close {
+      margin-left: auto;
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px;
+      border: none; background: none;
+      color: var(--grey-500); font-size: 15px; cursor: pointer;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .sidebar__logo-close:hover { background: rgba(255,255,255,0.08); color: #FFF; }
+
+    .sidebar__nav { padding: 8px 0; flex: 1; }
+
+    .sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      height: 44px;
+      font-size: 14px;
+      font-weight: var(--fw-regular);
+      color: var(--text-disabled);
+      cursor: pointer;
+      text-decoration: none;
+      user-select: none;
+      transition: background 150ms ease, color 150ms ease;
+      white-space: nowrap;
+      position: relative;
+    }
+    .sidebar__item:hover { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+    .sidebar__item.is-expanded { color: var(--text-primary); font-weight: var(--fw-semibold); }
+    .sidebar__item.is-active {
+      color: var(--orange);
+      font-weight: var(--fw-bold);
+      background: rgba(218,132,39,0.08);
+    }
+    .sidebar__item.is-active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 22px;
+      background: var(--orange);
+      border-radius: 0 2px 2px 0;
+    }
+    .sidebar__icon { width: 16px; text-align: center; font-size: 14px; flex-shrink: 0; }
+    .sidebar__arrow { margin-left: auto; font-size: 10px; color: var(--text-disabled); transition: transform 150ms ease; }
+    .sidebar__item.is-expanded .sidebar__arrow { transform: rotate(90deg); }
+    .sidebar__divider { height: 1px; background: var(--divider); margin: 4px 0; }
+
+    /* ── Main content ─────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Content inner padding ────────────────────────────────────── */
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px 24px 40px;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: var(--fw-bold);
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: background 150ms ease;
+      white-space: nowrap;
+    }
+    .btn--primary { background: var(--blue); color: #FFF; }
+    .btn--primary:hover { background: #0060dd; }
+    .btn--file {
+      background: var(--blue);
+      color: #FFF;
+      padding: 5px 14px;
+      font-size: 13px;
+    }
+    .btn--file:hover { background: #0060dd; }
+
+    /* ── New Application row ──────────────────────────────────────── */
+    .action-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 16px 24px 0;
+    }
+
+    /* ── Stat cards ───────────────────────────────────────────────── */
+    .stat-row {
+      display: flex;
+      gap: 32px;
+    }
+    .stat-card {
+      background: var(--bg-paper);
+      border-radius: var(--radius-card);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      box-shadow: 0 0 4px rgba(0,0,0,0.25);
+    }
+    .stat-card__value {
+      font-size: 24px;
+      font-weight: var(--fw-regular);
+      line-height: 1.2;
+      color: var(--text-primary);
+    }
+    .stat-card__value--red { color: var(--red-300); }
+    .stat-card__label {
+      font-size: 15px;
+      font-weight: var(--fw-bold);
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .stat-card__sub {
+      font-size: 12px;
+      font-weight: var(--fw-regular);
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    /* ── Toggle switch ────────────────────────────────────────────── */
+    .toggle-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: var(--fw-regular);
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle {
+      position: relative;
+      width: 30px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle__track {
+      position: absolute;
+      inset: 0;
+      background: var(--grey-400);
+      border-radius: 17.5px;
+      transition: background 200ms ease;
+    }
+    .toggle input:checked ~ .toggle__track { background: var(--blue); }
+    .toggle__thumb {
+      position: absolute;
+      top: 50%;
+      left: 4px;
+      transform: translateY(-50%);
+      width: 12px; height: 12px;
+      background: #FFF;
+      border-radius: 50%;
+      transition: left 200ms ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .toggle input:checked ~ .toggle__thumb { left: calc(100% - 16px); }
+
+    /* ── Datagrid filter bar ──────────────────────────────────────── */
+    .dg-filter {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dg-filter__left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .dg-filter__icon {
+      color: var(--text-secondary);
+      font-size: 16px;
+      cursor: pointer;
+      transition: color 150ms ease;
+    }
+    .dg-filter__icon:hover { color: var(--text-primary); }
+    .dg-filter__divider {
+      width: 1px; height: 20px;
+      background: var(--divider);
+    }
+    .dg-filter__right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .dg-filter__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: var(--fw-bold);
+      color: var(--blue);
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      transition: background 150ms ease;
+    }
+    .dg-filter__btn:hover { background: rgba(0,113,255,0.08); }
+
+    /* ── Data table card ──────────────────────────────────────────── */
+    .dg-card {
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+
+    /* ── Data table ───────────────────────────────────────────────── */
+    .dg-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .dg-table thead tr {
+      background: var(--grey-800);
+    }
+    .dg-table thead th {
+      padding: 8px 16px;
+      text-align: left;
+      font-size: 15px;
+      font-weight: var(--fw-bold);
+      color: var(--text-primary);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--divider);
+    }
+    .dg-table thead th:first-child,
+    .dg-table thead th:nth-child(2) { width: 48px; }
+
+    .dg-table tbody tr {
+      border-bottom: 1px solid rgba(66,66,66,0.4);
+      transition: background 120ms ease;
+    }
+    .dg-table tbody tr:last-child { border-bottom: none; }
+    .dg-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .dg-table tbody tr.is-expanded-row { background: rgba(255,255,255,0.03); }
+
+    .dg-table td {
+      padding: 8px 16px;
+      vertical-align: middle;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    /* Checkbox */
+    .dg-cb {
+      width: 16px; height: 16px;
+      accent-color: var(--blue);
+      cursor: pointer;
+      display: block;
+    }
+
+    /* Expand icon button */
+    .expand-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border: none; background: none;
+      color: var(--text-secondary);
+      font-size: 14px; cursor: pointer;
+      border-radius: 4px;
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .expand-btn:hover { background: rgba(255,255,255,0.08); color: #FFF; }
+
+    /* Claimant cell — 3 lines */
+    .cell-name  { font-weight: var(--fw-regular); color: var(--text-primary); line-height: 1.4; }
+    .cell-adj   { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
+    .cell-rec   { font-size: 14px; color: var(--text-secondary); font-style: italic; line-height: 1.4; }
+
+    /* Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: 64px;
+      font-size: 10px;
+      font-weight: var(--fw-regular);
+      white-space: nowrap;
+    }
+    .chip--overdue { background: var(--red-300); color: #000; }
+    .chip--filed   { background: var(--green-300); color: #000; }
+
+    /* More button */
+    .more-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border: none; background: none;
+      color: var(--text-secondary); font-size: 16px; cursor: pointer;
+      border-radius: 4px;
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .more-btn:hover { background: rgba(255,255,255,0.08); color: #FFF; }
+
+    /* Context menu */
+    .ctx-menu {
+      display: none;
+      position: absolute;
+      background: var(--grey-700);
+      border-radius: var(--radius-card);
+      box-shadow: 0 0 4px rgba(0,0,0,0.4);
+      padding: 8px;
+      min-width: 180px;
+      z-index: 300;
+    }
+    .ctx-menu.is-open { display: block; }
+    .ctx-menu__item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 15px;
+      color: var(--text-primary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: var(--font);
+      width: 100%;
+      text-align: left;
+      white-space: nowrap;
+      transition: background 120ms ease;
+    }
+    .ctx-menu__item:hover { background: rgba(255,255,255,0.08); }
+
+    /* ── Expanded detail panel ────────────────────────────────────── */
+    .detail-row { display: none; }
+    .detail-row.is-open { display: table-row; }
+
+    /* Outer container — #212121, subtle border, bottom padding */
+    .detail-panel {
+      background: #212121;
+      border-top: 0.5px solid rgba(0,0,0,0.08);
+      padding-bottom: 16px;
+    }
+
+    /* Each row of fields is a full-width flex container */
+    .detail-row-fields {
+      display: flex;
+      align-items: flex-start;
+      padding: 8px;
+    }
+
+    /* Each field takes equal width */
+    .detail-field {
+      flex: 1 0 0;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Label: 12px, secondary grey */
+    .detail-field__label {
+      font-size: 12px;
+      font-weight: var(--fw-regular);
+      color: #A1A1A1;
+      line-height: normal;
+      white-space: nowrap;
+    }
+
+    /* Value: 14px, white */
+    .detail-field__value {
+      font-size: 14px;
+      font-weight: var(--fw-regular);
+      color: #FFFFFF;
+      line-height: 1.1;
+    }
+
+    /* Linked value — blue underline + icon */
+    .detail-field__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: var(--fw-regular);
+      color: var(--blue);
+      text-decoration: underline;
+      line-height: 1.1;
+      cursor: pointer;
+    }
+
+    /* File value — filename + download icon */
+    .detail-field__file {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: var(--fw-regular);
+      color: #FFFFFF;
+      line-height: 1.1;
+    }
+    .detail-field__file-icon {
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color 150ms ease;
+    }
+    .detail-field__file-icon:hover { color: #FFF; }
+
+    /* Activity log section */
+    .detail-activity {
+      padding: 0 16px;
+    }
+    .detail-activity__title {
+      font-size: 12px;
+      font-weight: var(--fw-regular);
+      color: #A1A1A1;
+      padding: 8px 8px 8px;
+    }
+    .activity-dg {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .activity-dg table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .activity-dg thead tr {
+      background: rgba(255,255,255,0.06);
+    }
+    .activity-dg thead th {
+      padding: 8px 16px;
+      text-align: left;
+      font-size: 15px;
+      font-weight: var(--fw-bold);
+      color: var(--text-primary);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      white-space: nowrap;
+    }
+    .activity-dg thead th:first-child { width: 48px; }
+    .activity-dg tbody tr {
+      border-bottom: 1px solid rgba(66,66,66,0.4);
+    }
+    .activity-dg tbody tr:last-child { border-bottom: none; }
+    .activity-dg tbody td {
+      padding: 8px 16px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    .activity-dg .act-icon-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 8px;
+    }
+    .activity-dg .act-icon {
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .activity-dg .act-icon:hover { color: #FFF; }
+    
+    .activity-dg .act-desc { cursor: pointer; }
+    .activity-dg .act-desc:hover { text-decoration: underline !important; text-decoration-line: underline !important; }
+
+    /* ── Pagination ───────────────────────────────────────────────── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 4px 8px;
+    }
+    .pg-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px;
+      border: none; background: none;
+      color: var(--text-primary);
+      font-size: 14px; cursor: pointer;
+      border-radius: 100px;
+      font-family: var(--font);
+      line-height: 1.1;
+      transition: background 150ms ease;
+      opacity: 1;
+    }
+    .pg-btn:hover { background: rgba(255,255,255,0.1); }
+    .pg-btn.is-active { background: var(--grey-700); }
+    .pg-btn:disabled { opacity: 0.38; cursor: default; }
+    .pg-btn:disabled:hover { background: none; }
+    .pg-btn--nav {
+      border-radius: var(--radius-sm);
+    }
+
+    /* ── "All applications" hidden rows ───────────────────────────── */
+    tr.all-only { display: none; }
+    .show-all tr.all-only { display: table-row; }
+    .detail-row.all-only { display: none !important; }
+    .show-all .detail-row.all-only.is-open { display: table-row !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ APPBAR ════════════════════════════════════════════════════ -->
+  <header class="appbar">
+    <button class="appbar__menu-btn" id="hamburgerBtn" title="Open menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <span class="appbar__title">IMR Applications</span>
+    <button class="appbar__icon-btn" title="Theme"><i class="fa-regular fa-moon"></i></button>
+    <button class="appbar__icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
+    <button class="appbar__icon-btn" title="Account"><i class="fa-regular fa-circle-user"></i></button>
+  </header>
+
+  <!-- ═══ APP SHELL ════════════════════════════════════════════════ -->
+  <div class="app-shell">
+
+    <!-- ── Sidebar ──────────────────────────────────────────────── -->
+    <aside class="sidebar is-collapsed" id="sidebar">
+
+      <div class="sidebar__logo">
+        <a href="imr_dashboard_v4_1.html"><img src="../assets/gemini-logo-orange.png" alt="Gemini" /></a>
+        <button class="sidebar__logo-close" id="closeBtn" title="Close menu">
+          <i class="fa-regular fa-outdent"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-users"></i>Accounts</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-building"></i>Entities</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-folder-open"></i>Cases</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-paper-plane"></i>JetFiler</a>
+        <a class="sidebar__item" href="#">
+          <i class="sidebar__icon fa-regular fa-inbox"></i>Requests
+          <i class="sidebar__arrow fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="sidebar__item is-expanded" href="#">
+          <i class="sidebar__icon fa-regular fa-gears"></i>Processing
+          <i class="sidebar__arrow fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="sidebar__item is-active" href="imr-index.html">
+          <i class="sidebar__icon fa-regular fa-file-medical"></i>IMR Applications
+        </a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-scan"></i>OCR</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-receipt"></i>Vouchers</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-triangle-exclamation"></i>Issues</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-qrcode"></i>QR Guide</a>
+        <a class="sidebar__item" href="#">
+          <i class="sidebar__icon fa-regular fa-file-invoice"></i>Invoices
+          <i class="sidebar__arrow fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="sidebar__item" href="#">
+          <i class="sidebar__icon fa-regular fa-coins"></i>Fees
+          <i class="sidebar__arrow fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-share-nodes"></i>Shares</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-globe"></i>Web Serves</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-database"></i>Record Retrieval</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-location-dot"></i>Field</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-star"></i>Ratings</a>
+        <div class="sidebar__divider"></div>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-user"></i>Profile</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-gear"></i>Settings</a>
+        <a class="sidebar__item" href="#"><i class="sidebar__icon fa-regular fa-right-from-bracket"></i>Logout</a>
+      </nav>
+    </aside>
+
+    <!-- ── Main ─────────────────────────────────────────────────── -->
+    <main class="main">
+
+      <!-- New Application button — own row, right-aligned -->
+      <div class="action-row">
+        <button class="btn btn--primary">
+          <i class="fa-solid fa-plus"></i> New Application
+        </button>
+      </div>
+
+      <div class="content">
+
+        <!-- Stat cards -->
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-card__value stat-card__value--red">5</div>
+            <div class="stat-card__label">Pending filing</div>
+            <div class="stat-card__sub">Due today or overdue</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__value">4</div>
+            <div class="stat-card__label">Filed today</div>
+            <div class="stat-card__sub">04/06/2026</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__value">17</div>
+            <div class="stat-card__label">Filed this week</div>
+            <div class="stat-card__sub">04/06/2026 – 04/10/2026</div>
+          </div>
+        </div>
+
+        <!-- Toggle — own row above filter bar -->
+        <div>
+          <label class="toggle-wrap">
+            <span class="toggle">
+              <input type="checkbox" id="viewAllToggle" />
+              <span class="toggle__track"></span>
+              <span class="toggle__thumb"></span>
+            </span>
+            View All Application
+          </label>
+        </div>
+
+        <!-- Datagrid filter bar -->
+        <div class="dg-filter">
+          <div class="dg-filter__left">
+            <i class="fa-duotone fa-solid fa-eye dg-filter__icon" title="Visibility"></i>
+            <i class="fa-solid fa-filter dg-filter__icon" title="Filter"></i>
+            <div class="dg-filter__divider"></div>
+            <i class="fa-regular fa-table-columns dg-filter__icon" title="Columns"></i>
+          </div>
+          <div class="dg-filter__right">
+            <button class="dg-filter__btn">
+              <i class="fa-solid fa-down-to-line"></i> Export
+            </button>
+            <button class="dg-filter__btn">
+              <i class="fa-solid fa-rotate"></i> Reload
+            </button>
+          </div>
+        </div>
+
+        <!-- Datagrid -->
+        <div class="dg-card">
+          <div style="overflow-x: auto;">
+            <table class="dg-table" id="mainTable">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="dg-cb" /></th>
+                  <th></th>
+                  <th>Claimant/Case</th>
+                  <th>Account</th>
+                  <th>UR Denial Date</th>
+                  <th>REC. Filing Date</th>
+                  <th>Status</th>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+
+                <!-- Row 1 -->
+                <tr data-row="1">
+                  <td><input type="checkbox" class="dg-cb" /></td>
+                  <td>
+                    <button class="expand-btn" data-target="detail-1">
+                      <i class="fa-solid fa-angle-down"></i>
+                    </button>
+                  </td>
+                  <td>
+                    <div class="cell-name">Reyes, Carlos</div>
+                    <div class="cell-adj">ADJ20488722</div>
+                    <div class="cell-rec">REC-1856105</div>
+                  </td>
+                  <td>Alvarez &amp; Moreno</td>
+                  <td>01/15/2026</td>
+                  <td>02/25/2026</td>
+                  <td><span class="chip chip--overdue">Overdue</span></td>
+                  <td><button class="btn btn--file">File</button></td>
+                  <td style="position:relative;">
+                    <button class="more-btn" data-menu="menu-1"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="ctx-menu" id="menu-1">
+                      <button class="ctx-menu__item"><i class="fa-solid fa-pencil" style="font-size:14px;color:var(--text-secondary)"></i>Edit application</button>
+                      <button class="ctx-menu__item"><i class="fa-solid fa-trash-can" style="font-size:14px;color:var(--text-secondary)"></i>Delete application</button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="detail-row" id="detail-1">
+                  <td colspan="9" style="padding:0;">
+                    <div class="detail-panel">
+                      <!-- Row 1 -->
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Date</div><div class="detail-field__value">01/15/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Rec. Filing Date</div><div class="detail-field__value">02/25/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Actual Filed Date</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created By</div><div class="detail-field__value">Maria Santos</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created on</div><div class="detail-field__value">01/16/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Linked request</div><div class="detail-field__link">REC-1755194 <i class="fa-regular fa-arrow-up-from-square" style="font-size:11px;"></i></div></div>
+                      </div>
+                      <!-- Row 2 -->
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Carrier</div><div class="detail-field__value">Alvarez &amp; Moreno</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Carrier Address</div><div class="detail-field__value">123 Main St,<br>Los Angeles, CA 90001</div></div>
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Opposing</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Treatment Type</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Merus ID</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field" style="opacity:0;"></div>
+                      </div>
+                      <!-- Row 3 -->
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">IMR Application Document</div><div class="detail-field__file">IMR_Reyes.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Document</div><div class="detail-field__file">UR_Denial_Reyes.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">Additional Records</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"></div><div class="detail-field"></div><div class="detail-field"></div>
+                      </div>
+                      <!-- Activity Log -->
+                      <div class="detail-activity">
+                        <div class="detail-activity__title">Activity Log</div>
+                        <div class="activity-dg">
+                          <table>
+                            <thead><tr><th><input type="checkbox" class="dg-cb" /></th><th>Created on</th><th>Created By</th><th>Description</th><th style="width:72px;"></th></tr></thead>
+                            <tbody>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>04/01/2026</td><td>System</td><td><span class="act-desc">Scheduled to auto-file on 05/08/2026</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>01/16/2026</td><td>Maria Santos</td><td><span class="act-desc">Application created</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 2 -->
+                <tr data-row="2">
+                  <td><input type="checkbox" class="dg-cb" /></td>
+                  <td><button class="expand-btn" data-target="detail-2"><i class="fa-solid fa-angle-down"></i></button></td>
+                  <td>
+                    <div class="cell-name">Reyes, Carlos</div>
+                    <div class="cell-adj">ADJ20488722</div>
+                    <div class="cell-rec">REC-1856105</div>
+                  </td>
+                  <td>Alvarez &amp; Moreno</td>
+                  <td>01/15/2026</td>
+                  <td>02/25/2026</td>
+                  <td><span class="chip chip--overdue">Overdue</span></td>
+                  <td><button class="btn btn--file">File</button></td>
+                  <td style="position:relative;">
+                    <button class="more-btn" data-menu="menu-2"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="ctx-menu" id="menu-2">
+                      <button class="ctx-menu__item"><i class="fa-solid fa-pencil" style="font-size:14px;color:var(--text-secondary)"></i>Edit application</button>
+                      <button class="ctx-menu__item"><i class="fa-solid fa-trash-can" style="font-size:14px;color:var(--text-secondary)"></i>Delete application</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="detail-row" id="detail-2">
+                  <td colspan="9" style="padding:0;">
+                    <div class="detail-panel">
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Date</div><div class="detail-field__value">01/15/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Rec. Filing Date</div><div class="detail-field__value">02/25/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Actual Filed Date</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created By</div><div class="detail-field__value">James Rivera</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created on</div><div class="detail-field__value">01/16/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Linked request</div><div class="detail-field__link">REC-1855200 <i class="fa-regular fa-arrow-up-from-square" style="font-size:11px;"></i></div></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Carrier</div><div class="detail-field__value">Alvarez &amp; Moreno</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Carrier Address</div><div class="detail-field__value">456 Grand Ave,<br>Los Angeles, CA 90015</div></div>
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Opposing</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Treatment Type</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Merus ID</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field" style="opacity:0;"></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">IMR Application Document</div><div class="detail-field__file">IMR_Reyes2.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Document</div><div class="detail-field__file">UR_Denial_Reyes2.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">Additional Records</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"></div><div class="detail-field"></div><div class="detail-field"></div>
+                      </div>
+                      <div class="detail-activity">
+                        <div class="detail-activity__title">Activity Log</div>
+                        <div class="activity-dg">
+                          <table>
+                            <thead><tr><th><input type="checkbox" class="dg-cb" /></th><th>Created on</th><th>Created By</th><th>Description</th><th style="width:72px;"></th></tr></thead>
+                            <tbody>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>01/16/2026</td><td>James Rivera</td><td><span class="act-desc">Application created</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 3 -->
+                <tr data-row="3">
+                  <td><input type="checkbox" class="dg-cb" /></td>
+                  <td><button class="expand-btn" data-target="detail-3"><i class="fa-solid fa-angle-down"></i></button></td>
+                  <td>
+                    <div class="cell-name">Reyes, Carlos</div>
+                    <div class="cell-adj">ADJ20488722</div>
+                    <div class="cell-rec">REC-1856105</div>
+                  </td>
+                  <td>Alvarez &amp; Moreno</td>
+                  <td>01/15/2026</td>
+                  <td>02/25/2026</td>
+                  <td><span class="chip chip--overdue">Overdue</span></td>
+                  <td><button class="btn btn--file">File</button></td>
+                  <td style="position:relative;">
+                    <button class="more-btn" data-menu="menu-3"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="ctx-menu" id="menu-3">
+                      <button class="ctx-menu__item"><i class="fa-solid fa-pencil" style="font-size:14px;color:var(--text-secondary)"></i>Edit application</button>
+                      <button class="ctx-menu__item"><i class="fa-solid fa-trash-can" style="font-size:14px;color:var(--text-secondary)"></i>Delete application</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="detail-row" id="detail-3">
+                  <td colspan="9" style="padding:0;">
+                    <div class="detail-panel">
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Date</div><div class="detail-field__value">01/15/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Rec. Filing Date</div><div class="detail-field__value">02/25/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Actual Filed Date</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created By</div><div class="detail-field__value">Lisa Nguyen</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created on</div><div class="detail-field__value">01/16/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Linked request</div><div class="detail-field__link">REC-1856000 <i class="fa-regular fa-arrow-up-from-square" style="font-size:11px;"></i></div></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Carrier</div><div class="detail-field__value">Alvarez &amp; Moreno</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Carrier Address</div><div class="detail-field__value">789 Wilshire Blvd,<br>Los Angeles, CA 90017</div></div>
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Opposing</div><div class="detail-field__value">Martinez &amp; Assoc.</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Treatment Type</div><div class="detail-field__value">Physical Therapy</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Merus ID</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field" style="opacity:0;"></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">IMR Application Document</div><div class="detail-field__file">IMR_Reyes3.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Document</div><div class="detail-field__file">UR_Denial_Reyes3.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">Additional Records</div><div class="detail-field__value">2 documents</div></div>
+                        <div class="detail-field"></div><div class="detail-field"></div><div class="detail-field"></div>
+                      </div>
+                      <div class="detail-activity">
+                        <div class="detail-activity__title">Activity Log</div>
+                        <div class="activity-dg">
+                          <table>
+                            <thead><tr><th><input type="checkbox" class="dg-cb" /></th><th>Created on</th><th>Created By</th><th>Description</th><th style="width:72px;"></th></tr></thead>
+                            <tbody>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>04/02/2026</td><td>System</td><td><span class="act-desc">Scheduled to auto-file on 05/08/2026</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>01/16/2026</td><td>Lisa Nguyen</td><td><span class="act-desc">Application created</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 4 -->
+                <tr data-row="4">
+                  <td><input type="checkbox" class="dg-cb" /></td>
+                  <td><button class="expand-btn" data-target="detail-4"><i class="fa-solid fa-angle-down"></i></button></td>
+                  <td>
+                    <div class="cell-name">Reyes, Carlos</div>
+                    <div class="cell-adj">ADJ20488722</div>
+                    <div class="cell-rec">REC-1856105</div>
+                  </td>
+                  <td>Alvarez &amp; Moreno</td>
+                  <td>01/15/2026</td>
+                  <td>02/25/2026</td>
+                  <td><span class="chip chip--overdue">Overdue</span></td>
+                  <td><button class="btn btn--file">File</button></td>
+                  <td style="position:relative;">
+                    <button class="more-btn" data-menu="menu-4"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="ctx-menu" id="menu-4">
+                      <button class="ctx-menu__item"><i class="fa-solid fa-pencil" style="font-size:14px;color:var(--text-secondary)"></i>Edit application</button>
+                      <button class="ctx-menu__item"><i class="fa-solid fa-trash-can" style="font-size:14px;color:var(--text-secondary)"></i>Delete application</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="detail-row" id="detail-4">
+                  <td colspan="9" style="padding:0;">
+                    <div class="detail-panel">
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Date</div><div class="detail-field__value">01/15/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Rec. Filing Date</div><div class="detail-field__value">02/25/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Actual Filed Date</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created By</div><div class="detail-field__value">Tom Kirkland</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created on</div><div class="detail-field__value">01/16/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Linked request</div><div class="detail-field__link">REC-1856055 <i class="fa-regular fa-arrow-up-from-square" style="font-size:11px;"></i></div></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Carrier</div><div class="detail-field__value">Alvarez &amp; Moreno</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Carrier Address</div><div class="detail-field__value">100 N Brand Blvd,<br>Glendale, CA 91203</div></div>
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Opposing</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Treatment Type</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Merus ID</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field" style="opacity:0;"></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">IMR Application Document</div><div class="detail-field__file">IMR_Reyes4.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Document</div><div class="detail-field__file">UR_Denial_Reyes4.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">Additional Records</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"></div><div class="detail-field"></div><div class="detail-field"></div>
+                      </div>
+                      <div class="detail-activity">
+                        <div class="detail-activity__title">Activity Log</div>
+                        <div class="activity-dg">
+                          <table>
+                            <thead><tr><th><input type="checkbox" class="dg-cb" /></th><th>Created on</th><th>Created By</th><th>Description</th><th style="width:72px;"></th></tr></thead>
+                            <tbody>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>01/16/2026</td><td>Tom Kirkland</td><td><span class="act-desc">Application created</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 5 -->
+                <tr data-row="5">
+                  <td><input type="checkbox" class="dg-cb" /></td>
+                  <td><button class="expand-btn" data-target="detail-5"><i class="fa-solid fa-angle-down"></i></button></td>
+                  <td>
+                    <div class="cell-name">Reyes, Carlos</div>
+                    <div class="cell-adj">ADJ20488722</div>
+                    <div class="cell-rec">REC-1856105</div>
+                  </td>
+                  <td>Alvarez &amp; Moreno</td>
+                  <td>01/15/2026</td>
+                  <td>02/25/2026</td>
+                  <td><span class="chip chip--overdue">Overdue</span></td>
+                  <td><button class="btn btn--file">File</button></td>
+                  <td style="position:relative;">
+                    <button class="more-btn" data-menu="menu-5"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="ctx-menu" id="menu-5">
+                      <button class="ctx-menu__item"><i class="fa-solid fa-pencil" style="font-size:14px;color:var(--text-secondary)"></i>Edit application</button>
+                      <button class="ctx-menu__item"><i class="fa-solid fa-trash-can" style="font-size:14px;color:var(--text-secondary)"></i>Delete application</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="detail-row" id="detail-5">
+                  <td colspan="9" style="padding:0;">
+                    <div class="detail-panel">
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Date</div><div class="detail-field__value">01/15/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Rec. Filing Date</div><div class="detail-field__value">02/25/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Actual Filed Date</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created By</div><div class="detail-field__value">Maria Santos</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created on</div><div class="detail-field__value">01/16/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Linked request</div><div class="detail-field__link">REC-1856090 <i class="fa-regular fa-arrow-up-from-square" style="font-size:11px;"></i></div></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Carrier</div><div class="detail-field__value">Alvarez &amp; Moreno</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Carrier Address</div><div class="detail-field__value">200 S Spring St,<br>Los Angeles, CA 90012</div></div>
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Opposing</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Treatment Type</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Merus ID</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field" style="opacity:0;"></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">IMR Application Document</div><div class="detail-field__file">IMR_Reyes5.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Document</div><div class="detail-field__file">UR_Denial_Reyes5.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">Additional Records</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"></div><div class="detail-field"></div><div class="detail-field"></div>
+                      </div>
+                      <div class="detail-activity">
+                        <div class="detail-activity__title">Activity Log</div>
+                        <div class="activity-dg">
+                          <table>
+                            <thead><tr><th><input type="checkbox" class="dg-cb" /></th><th>Created on</th><th>Created By</th><th>Description</th><th style="width:72px;"></th></tr></thead>
+                            <tbody>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>01/16/2026</td><td>Maria Santos</td><td><span class="act-desc">Application created</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- ── "All Applications" extra rows (hidden until toggle ON) ── -->
+
+                <!-- Row 6 — Filed -->
+                <tr class="all-only" data-row="6">
+                  <td><input type="checkbox" class="dg-cb" /></td>
+                  <td><button class="expand-btn" data-target="detail-6"><i class="fa-solid fa-angle-down"></i></button></td>
+                  <td>
+                    <div class="cell-name">Reyes, Carlos</div>
+                    <div class="cell-adj">ADJ20488722</div>
+                    <div class="cell-rec">REC-1856105</div>
+                  </td>
+                  <td>Alvarez &amp; Moreno</td>
+                  <td>01/15/2026</td>
+                  <td>02/25/2026</td>
+                  <td><span class="chip chip--filed">Filed</span></td>
+                  <td></td>
+                  <td style="position:relative;">
+                    <button class="more-btn" data-menu="menu-6"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="ctx-menu" id="menu-6">
+                      <button class="ctx-menu__item"><i class="fa-solid fa-pencil" style="font-size:14px;color:var(--text-secondary)"></i>Edit application</button>
+                      <button class="ctx-menu__item"><i class="fa-solid fa-trash-can" style="font-size:14px;color:var(--text-secondary)"></i>Delete application</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="detail-row all-only" id="detail-6">
+                  <td colspan="9" style="padding:0;">
+                    <div class="detail-panel">
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Date</div><div class="detail-field__value">01/15/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Rec. Filing Date</div><div class="detail-field__value">02/25/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Actual Filed Date</div><div class="detail-field__value">02/24/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created By</div><div class="detail-field__value">James Rivera</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created on</div><div class="detail-field__value">01/16/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Linked request</div><div class="detail-field__link">REC-1856106 <i class="fa-regular fa-arrow-up-from-square" style="font-size:11px;"></i></div></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Carrier</div><div class="detail-field__value">Alvarez &amp; Moreno</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Carrier Address</div><div class="detail-field__value">123 Main St,<br>Los Angeles, CA 90001</div></div>
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Opposing</div><div class="detail-field__value">Wilson Legal Group</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Treatment Type</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Merus ID</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field" style="opacity:0;"></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">IMR Application Document</div><div class="detail-field__file">IMR_Reyes6.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Document</div><div class="detail-field__file">UR_Denial_Reyes6.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">Additional Records</div><div class="detail-field__value">1 document</div></div>
+                        <div class="detail-field"></div><div class="detail-field"></div><div class="detail-field"></div>
+                      </div>
+                      <div class="detail-activity">
+                        <div class="detail-activity__title">Activity Log</div>
+                        <div class="activity-dg">
+                          <table>
+                            <thead><tr><th><input type="checkbox" class="dg-cb" /></th><th>Created on</th><th>Created By</th><th>Description</th><th style="width:72px;"></th></tr></thead>
+                            <tbody>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>02/24/2026</td><td>James Rivera</td><td><span class="act-desc">Application filed</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>01/16/2026</td><td>James Rivera</td><td><span class="act-desc">Application created</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 7 — Filed -->
+                <tr class="all-only" data-row="7">
+                  <td><input type="checkbox" class="dg-cb" /></td>
+                  <td><button class="expand-btn" data-target="detail-7"><i class="fa-solid fa-angle-down"></i></button></td>
+                  <td>
+                    <div class="cell-name">Reyes, Carlos</div>
+                    <div class="cell-adj">ADJ20488722</div>
+                    <div class="cell-rec">REC-1856105</div>
+                  </td>
+                  <td>Alvarez &amp; Moreno</td>
+                  <td>01/15/2026</td>
+                  <td>02/25/2026</td>
+                  <td><span class="chip chip--filed">Filed</span></td>
+                  <td></td>
+                  <td style="position:relative;">
+                    <button class="more-btn" data-menu="menu-7"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="ctx-menu" id="menu-7">
+                      <button class="ctx-menu__item"><i class="fa-solid fa-pencil" style="font-size:14px;color:var(--text-secondary)"></i>Edit application</button>
+                      <button class="ctx-menu__item"><i class="fa-solid fa-trash-can" style="font-size:14px;color:var(--text-secondary)"></i>Delete application</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="detail-row all-only" id="detail-7">
+                  <td colspan="9" style="padding:0;">
+                    <div class="detail-panel">
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Date</div><div class="detail-field__value">01/15/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Rec. Filing Date</div><div class="detail-field__value">02/25/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Actual Filed Date</div><div class="detail-field__value">02/23/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created By</div><div class="detail-field__value">Lisa Nguyen</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Created on</div><div class="detail-field__value">01/16/2026</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Linked request</div><div class="detail-field__link">REC-1856107 <i class="fa-regular fa-arrow-up-from-square" style="font-size:11px;"></i></div></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Carrier</div><div class="detail-field__value">Alvarez &amp; Moreno</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Carrier Address</div><div class="detail-field__value">123 Main St,<br>Los Angeles, CA 90001</div></div>
+                        <div class="detail-field"><div class="detail-field__label">POS Recipients - Opposing</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Treatment Type</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"><div class="detail-field__label">Merus ID</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field" style="opacity:0;"></div>
+                      </div>
+                      <div class="detail-row-fields">
+                        <div class="detail-field"><div class="detail-field__label">IMR Application Document</div><div class="detail-field__file">IMR_Reyes7.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">UR Denial Document</div><div class="detail-field__file">UR_Denial_Reyes7.pdf <i class="fa-regular fa-arrow-down-to-line detail-field__file-icon" title="Download"></i></div></div>
+                        <div class="detail-field"><div class="detail-field__label">Additional Records</div><div class="detail-field__value">-</div></div>
+                        <div class="detail-field"></div><div class="detail-field"></div><div class="detail-field"></div>
+                      </div>
+                      <div class="detail-activity">
+                        <div class="detail-activity__title">Activity Log</div>
+                        <div class="activity-dg">
+                          <table>
+                            <thead><tr><th><input type="checkbox" class="dg-cb" /></th><th>Created on</th><th>Created By</th><th>Description</th><th style="width:72px;"></th></tr></thead>
+                            <tbody>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>02/23/2026</td><td>Lisa Nguyen</td><td><span class="act-desc">Application filed</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                              <tr><td><input type="checkbox" class="dg-cb" /></td><td>01/16/2026</td><td>Lisa Nguyen</td><td><span class="act-desc">Application created</span></td><td><div class="act-icon-cell"><i class="fa-solid fa-pencil act-icon"></i><i class="fa-solid fa-trash-can act-icon"></i></div></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination">
+            <button class="pg-btn pg-btn--nav" disabled title="First"><i class="fa-solid fa-angles-left" style="font-size:10px;"></i></button>
+            <button class="pg-btn pg-btn--nav" disabled title="Previous"><i class="fa-solid fa-angle-left" style="font-size:10px;"></i></button>
+            <button class="pg-btn is-active">1</button>
+            <button class="pg-btn">2</button>
+            <button class="pg-btn">3</button>
+            <button class="pg-btn pg-btn--nav" title="Next"><i class="fa-solid fa-angle-right" style="font-size:10px;"></i></button>
+            <button class="pg-btn pg-btn--nav" title="Last"><i class="fa-solid fa-angles-right" style="font-size:10px;"></i></button>
+          </div>
+
+        </div><!-- /dg-card -->
+
+      </div><!-- /content -->
+    </main>
+  </div><!-- /app-shell -->
+
+  <script>
+    (function () {
+
+      /* ── Sidebar ────────────────────────────────────────────────── */
+      var sidebar      = document.getElementById('sidebar');
+      var closeBtn     = document.getElementById('closeBtn');
+      var hamburgerBtn = document.getElementById('hamburgerBtn');
+
+      hamburgerBtn.addEventListener('click', function () {
+        sidebar.classList.toggle('is-collapsed');
+      });
+      closeBtn.addEventListener('click', function () {
+        sidebar.classList.add('is-collapsed');
+      });
+
+      /* ── Row expand / collapse ──────────────────────────────────── */
+      document.querySelectorAll('.expand-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var targetId  = btn.getAttribute('data-target');
+          var detailRow = document.getElementById(targetId);
+          var icon      = btn.querySelector('i');
+          var isOpen    = detailRow.classList.toggle('is-open');
+          btn.closest('tr').classList.toggle('is-expanded-row', isOpen);
+          icon.className = isOpen ? 'fa-solid fa-angle-up' : 'fa-solid fa-angle-down';
+        });
+      });
+
+      /* ── View All toggle ────────────────────────────────────────── */
+      var toggle    = document.getElementById('viewAllToggle');
+      var tableBody = document.getElementById('tableBody');
+
+      toggle.addEventListener('change', function () {
+        if (toggle.checked) {
+          tableBody.classList.add('show-all');
+        } else {
+          tableBody.classList.remove('show-all');
+          document.querySelectorAll('.detail-row.all-only.is-open').forEach(function (r) {
+            r.classList.remove('is-open');
+          });
+        }
+      });
+
+      /* ── Context menus (⋮ more) ─────────────────────────────────── */
+      document.querySelectorAll('.more-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var menuId = btn.getAttribute('data-menu');
+          var menu   = document.getElementById(menuId);
+          var isOpen = menu.classList.contains('is-open');
+          // Close all menus first
+          document.querySelectorAll('.ctx-menu').forEach(function (m) { m.classList.remove('is-open'); });
+          if (!isOpen) menu.classList.add('is-open');
+        });
+      });
+      document.addEventListener('click', function () {
+        document.querySelectorAll('.ctx-menu').forEach(function (m) { m.classList.remove('is-open'); });
+      });
+
+      /* ── Pagination (visual) ────────────────────────────────────── */
+      document.querySelectorAll('.pg-btn:not(.pg-btn--nav)').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.pg-btn').forEach(function (b) { b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+        });
+      });
+
+    })();
+  </script>
+
+</body>
+</html>

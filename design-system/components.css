@@ -15,6 +15,20 @@
   padding: 0;
 }
 
+/* Page scrollbar overlays content — no layout gap on the right */
+html {
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+html::-webkit-scrollbar { width: 6px; }
+html::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+html:hover::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.35); }
+
 body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
@@ -1593,7 +1607,7 @@ body {
 .de-table td.de-table__drag {
   width: 28px;
   text-align: center;
-  padding: var(--space-1) 4px;
+  padding: var(--space-1) 8px;
   color: var(--grid-disabled-text);
   cursor: grab;
 }
@@ -1602,7 +1616,7 @@ body {
 .de-table td.de-table__more {
   width: 28px;
   text-align: center;
-  padding: var(--space-1) 4px;
+  padding: var(--space-1) 8px;
   color: var(--grid-body-text);
   cursor: pointer;
 }
@@ -1615,10 +1629,10 @@ body {
   transition: opacity var(--transition-fast);
 }
 
-.de-table tbody tr:hover:not(.is-disabled) td.de-table__drag i,
-.de-table tbody tr:hover:not(.is-disabled) td.de-table__drag svg,
-.de-table tbody tr:hover:not(.is-disabled) td.de-table__more i,
-.de-table tbody tr:hover:not(.is-disabled) td.de-table__more svg {
+.de-table tbody tr:hover:not(.is-disabled) > td.de-table__drag > i,
+.de-table tbody tr:hover:not(.is-disabled) > td.de-table__drag > svg,
+.de-table tbody tr:hover:not(.is-disabled) > td.de-table__more > i,
+.de-table tbody tr:hover:not(.is-disabled) > td.de-table__more > svg {
   opacity: 1;
 }
 

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini — IMR Applications</title>
+
+  <link rel="stylesheet" href="../design-system/tokens.css" />
+  <link rel="stylesheet" href="../design-system/components.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/32dfe1c9ba.js" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SIDEBAR
+    ══════════════════════════════════════════════════════ */
+    .de-sidebar {
+      width: 240px;
+      min-width: 240px;
+      height: 100vh;
+      background: var(--index-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 32px 0;
+      border-right: 1px solid var(--divider);
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+      transition: width var(--transition-base), min-width var(--transition-base), opacity var(--transition-base);
+      box-shadow: 0 1px 8px rgba(0,0,0,0.12), 0 3px 4px rgba(0,0,0,0.14), 0 3px 3px -2px rgba(0,0,0,0.20);
+    }
+    .de-sidebar::-webkit-scrollbar { width: 4px; }
+    .de-sidebar::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    /* Collapsed state */
+    .de-sidebar.is-collapsed {
+      width: 0;
+      min-width: 0;
+      opacity: 0;
+      pointer-events: none;
+      padding: 0;
+      border-right: none;
+    }
+
+    /* ── Logo row ── */
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo__lockup {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+
+    .sidebar-logo__close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .sidebar-logo__close:hover { background: var(--index-bg-hovered); color: var(--text-primary); }
+
+    /* ── Nav items ── */
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .de-sidebar__item {
+      gap: 16px;
+      padding: 0 24px;
+      height: auto;
+      min-height: 32px;
+      white-space: nowrap;
+    }
+
+    .de-sidebar__item-label {
+      padding: 8px 0;
+      font-size: 15px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .de-sidebar__item.is-active .de-sidebar__item-label {
+      font-weight: var(--font-weight-bold);
+      color: var(--index-text-selected);
+    }
+    .de-sidebar__item:not(.is-active) .de-sidebar__item-label {
+      color: var(--index-text);
+    }
+
+    .de-sidebar__item .sidebar-expand {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--text-disabled);
+      transform: rotate(-90deg);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       MAIN COLUMN — content header + scrollable body
+    ══════════════════════════════════════════════════════ */
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* ── Content header (matches Voucher Sessions top bar) ── */
+    .content-header {
+      display: flex;
+      align-items: center;
+      height: 52px;
+      padding: 0 24px;
+      background: var(--bg-page);
+      border-bottom: 1px solid var(--divider);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .content-header__left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Hamburger — visible only when sidebar is collapsed */
+    .content-header__hamburger {
+      display: none;           /* hidden by default (sidebar open) */
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: none;
+      color: var(--text-primary);
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      transition: background var(--transition-fast);
+    }
+    .content-header__hamburger:hover { background: var(--bg-tertiary); }
+
+    /* Show hamburger when sidebar is collapsed */
+    .de-sidebar.is-collapsed ~ .app-main .content-header__hamburger {
+      display: flex;
+    }
+
+    .content-header__title {
+      font-size: 20px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .content-header__right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .content-header__divider {
+      width: 1px;
+      height: 20px;
+      background: var(--divider);
+      margin: 0 4px;
+    }
+
+    .content-header__icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: none;
+      color: #979797;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .content-header__icon-btn:hover { background: rgba(255,255,255,0.07); color: #fff; }
+
+    /* ── Scrollable content body ── */
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Grid panel ── */
+    .grid-panel {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-2) var(--space-1);
+      box-shadow: 0 1px 10px rgba(0,0,0,.18), 0 4px 5px rgba(0,0,0,.14), 0 2px 4px rgba(0,0,0,.2);
+    }
+
+    /* ── Grid toolbar ── */
+    .grid-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-1);
+      min-height: 36px;
+    }
+    .grid-toolbar__left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .grid-toolbar__icon {
+      color: var(--text-action);
+      font-size: 16px;
+      cursor: pointer;
+      transition: opacity var(--transition-fast);
+    }
+    .grid-toolbar__icon:hover { opacity: 0.75; }
+    .grid-toolbar__divider {
+      width: 1px;
+      height: 20px;
+      background: var(--divider);
+    }
+    .grid-toolbar__right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .grid-toolbar__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--text-action);
+      font-family: var(--font-family);
+      font-size: var(--font-size-body1);
+      font-weight: var(--font-weight-bold);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    .grid-toolbar__btn:hover { background: rgba(0,113,255,0.08); }
+
+    /* ── Table columns ── */
+    .de-table .col-applicant  { min-width: 130px; white-space: nowrap; }
+    .de-table .col-imr-num    { min-width: 100px; white-space: nowrap; }
+    .de-table .col-case       { min-width: 110px; white-space: nowrap; }
+    .de-table .col-submitted  { min-width: 96px;  white-space: nowrap; }
+    .de-table .col-party      { min-width: 120px; }
+    .de-table .col-specialty  { min-width: 120px; }
+    .de-table .col-physician  { min-width: 130px; }
+    .de-table .col-due        { min-width: 90px;  white-space: nowrap; }
+    .de-table .col-decision   { min-width: 110px; }
+    .de-table .col-rush       { min-width: 50px;  white-space: nowrap; }
+    .de-table .col-status     { min-width: 80px; }
+
+    /* ── Pagination ── */
+    .grid-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 16px;
+      padding: var(--space-1) var(--space-1) 0;
+      font-size: var(--font-size-body2);
+      color: var(--text-secondary);
+    }
+    .grid-pagination__rows-label { display: flex; align-items: center; gap: 8px; }
+    .grid-pagination__info { white-space: nowrap; }
+    .grid-pagination__nav { display: flex; align-items: center; gap: 4px; }
+    .grid-pagination__nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+    .grid-pagination__nav-btn:hover { background: var(--bg-tertiary); }
+    .grid-pagination__nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .grid-pagination__nav-btn:disabled:hover { background: none; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ SIDEBAR ═════════════════════════════════════════════════════ -->
+  <aside class="de-sidebar" id="sidebar">
+
+    <div class="sidebar-logo">
+      <a class="sidebar-logo__lockup" href="imr_dashboard_v4_1.html">
+        <img src="../assets/gemini-logo-orange.png" alt="Gemini" style="height: 22px; width: auto; display: block;" />
+      </a>
+      <button class="sidebar-logo__close" id="sidebar-close-btn" title="Close menu">
+        <i class="fa-regular fa-outdent"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-user-lock"></i>
+        <span class="de-sidebar__item-label">Accounts</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-buildings"></i>
+        <span class="de-sidebar__item-label">Entities</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-money-bill-wave"></i>
+        <span class="de-sidebar__item-label">Expenses</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-briefcase"></i>
+        <span class="de-sidebar__item-label">Cases</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-jet-fighter-up"></i>
+        <span class="de-sidebar__item-label">JetFiler</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-ballot-check"></i>
+        <span class="de-sidebar__item-label">Requests</span>
+        <i class="sidebar-expand fa-solid fa-caret-down"></i>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-gears"></i>
+        <span class="de-sidebar__item-label">Processing</span>
+        <i class="sidebar-expand fa-solid fa-caret-down"></i>
+      </a>
+      <a class="de-sidebar__item is-active" href="#">
+        <i class="de-sidebar__icon fa-solid fa-clipboard-medical"></i>
+        <span class="de-sidebar__item-label">IMR Applications</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-ticket"></i>
+        <span class="de-sidebar__item-label">Vouchers</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-octagon-exclamation"></i>
+        <span class="de-sidebar__item-label">Issues</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-notebook"></i>
+        <span class="de-sidebar__item-label">QR Guide</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-file-invoice-dollar"></i>
+        <span class="de-sidebar__item-label">Invoices</span>
+        <i class="sidebar-expand fa-solid fa-caret-down"></i>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-sack-dollar"></i>
+        <span class="de-sidebar__item-label">Fees</span>
+        <i class="sidebar-expand fa-solid fa-caret-down"></i>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-square-share-nodes"></i>
+        <span class="de-sidebar__item-label">Shares</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-browser"></i>
+        <span class="de-sidebar__item-label">Web Serves</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-folders"></i>
+        <span class="de-sidebar__item-label">Bulk Hand Serves</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-rabbit-running"></i>
+        <span class="de-sidebar__item-label">Record Retrieval</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-car-building"></i>
+        <span class="de-sidebar__item-label">Field</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-calculator"></i>
+        <span class="de-sidebar__item-label">Ratings</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-circle-user"></i>
+        <span class="de-sidebar__item-label">Profile</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-gear"></i>
+        <span class="de-sidebar__item-label">Settings</span>
+      </a>
+      <a class="de-sidebar__item" href="#">
+        <i class="de-sidebar__icon fa-solid fa-right-from-bracket"></i>
+        <span class="de-sidebar__item-label">Logout</span>
+      </a>
+    </nav>
+
+  </aside>
+
+  <!-- ═══ MAIN COLUMN ══════════════════════════════════════════════════ -->
+  <div class="app-main">
+
+    <!-- Content header — mirrors "Voucher Sessions" top bar -->
+    <div class="content-header">
+      <div class="content-header__left">
+        <button class="content-header__hamburger" id="sidebar-open-btn" title="Open menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <h1 class="content-header__title">IMR Applications</h1>
+      </div>
+      <div class="content-header__right">
+        <button class="de-btn de-btn--primary">
+          <i class="fa-solid fa-plus"></i> New IMR
+        </button>
+        <button class="de-btn de-btn--secondary">
+          All IMR <i class="fa-solid fa-caret-down"></i>
+        </button>
+        <div class="content-header__divider"></div>
+        <button class="content-header__icon-btn" title="Sync"><i class="fa-regular fa-cloud-arrow-up"></i></button>
+        <button class="content-header__icon-btn" title="Feedback"><i class="fa-regular fa-thumbs-up"></i></button>
+        <button class="content-header__icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
+        <button class="content-header__icon-btn" title="Account"><i class="fa-regular fa-circle-user"></i></button>
+      </div>
+    </div>
+
+    <!-- Scrollable content body -->
+    <div class="app-content">
+
+      <div class="grid-panel">
+
+        <!-- Toolbar -->
+        <div class="grid-toolbar">
+          <div class="grid-toolbar__left">
+            <i class="fa-duotone fa-solid fa-eye grid-toolbar__icon" title="Show/Hide columns"></i>
+            <i class="fa-solid fa-filter grid-toolbar__icon" title="Filter"></i>
+            <span class="grid-toolbar__divider"></span>
+            <i class="fa-regular fa-table-columns grid-toolbar__icon" title="Manage columns"></i>
+          </div>
+          <div class="grid-toolbar__right">
+            <button class="grid-toolbar__btn">
+              <i class="fa-solid fa-down-to-line"></i> Export
+            </button>
+            <button class="grid-toolbar__btn">
+              <i class="fa-solid fa-rotate"></i> Reload
+            </button>
+          </div>
+        </div>
+
+        <!-- Data table -->
+        <div class="de-table-wrap">
+          <table class="de-table">
+            <thead>
+              <tr>
+                <th class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></th>
+                <th class="col-applicant">Applicant</th>
+                <th class="col-imr-num">IMR Num...</th>
+                <th class="col-case">Case Number</th>
+                <th class="col-submitted">Submitted <i class="fa-solid fa-arrow-down-short-wide" style="font-size:11px; color:var(--text-secondary);"></i></th>
+                <th class="col-party">Requesting Party</th>
+                <th class="col-specialty">Specialty</th>
+                <th class="col-physician">Treating Physician</th>
+                <th class="col-due">Due Date</th>
+                <th class="col-decision">Decision</th>
+                <th class="col-rush">Rush</th>
+                <th class="col-status">Status</th>
+                <th class="de-table__more"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">KEITH WRIGHT</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125711</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ22095154</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">SEDGWICK ORANGE</td>
+                <td class="col-specialty">Orthopedic Surgery</td>
+                <td class="col-physician">Dr. Maria Lopez</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--progress-dark">Pending</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">ELBA PLIEGO</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125712</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ20666418</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">ZURICH NORTH AMERICA</td>
+                <td class="col-specialty">Pain Management</td>
+                <td class="col-physician">Dr. James Park</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--progress-dark">Pending</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">AUDREY JARRETT</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125713</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ21344019</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">CANNON COCHRAN MGMT</td>
+                <td class="col-specialty">Neurology</td>
+                <td class="col-physician">Dr. Susan Kim</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--progress-dark">Pending</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">ANTONIJA SUSAC</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125714</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ18796102</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">SEDGWICK CMS</td>
+                <td class="col-specialty">Physical Therapy</td>
+                <td class="col-physician">Dr. Chen Wei</td>
+                <td class="col-due">04/10/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--complete-dark">Approved</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--complete-dark">Done</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">LEONARDO MUNOZ</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125715</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ18903108</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">STATE COMPENSATION INS</td>
+                <td class="col-specialty">Spine Surgery</td>
+                <td class="col-physician">Dr. Ahmed Nassar</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--progress-dark">Pending</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">CHARLOTTE STEVENSON</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125716</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ18015559</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">SEDGWICK CMS</td>
+                <td class="col-specialty">Occupational Med</td>
+                <td class="col-physician">Dr. Rachel Torres</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--error-dark">Denied</span></td>
+                <td class="col-rush">YES</td>
+                <td class="col-status"><span class="de-chip de-chip--error-dark">Closed</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">STEPHANIE CRISOSTOMO</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125717</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ18555776</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">THE HARTFORD INSURANCE</td>
+                <td class="col-specialty">Psychiatry</td>
+                <td class="col-physician">Dr. Nina Patel</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--progress-dark">Pending</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">MARTHA GUTIERREZ</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125718</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ22048872</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">HELMSMAN MGMT</td>
+                <td class="col-specialty">Cardiology</td>
+                <td class="col-physician">Dr. Kevin Reyes</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--neutral">Modified</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">JOEL FUENTES</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125719</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ21920050</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">OMAHA NATIONAL</td>
+                <td class="col-specialty">Internal Medicine</td>
+                <td class="col-physician">Dr. Laura Chen</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--progress-dark">Pending</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">JOSE RIVERA SILVA</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125720</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ17366311</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">SEDGWICK CMS</td>
+                <td class="col-specialty">Orthopedic Surgery</td>
+                <td class="col-physician">Dr. Robert Kim</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--complete-dark">Approved</span></td>
+                <td class="col-rush">NO</td>
+                <td class="col-status"><span class="de-chip de-chip--complete-dark">Done</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+              <tr>
+                <td class="de-table__checkbox"><input type="checkbox" class="de-checkbox__input" /></td>
+                <td class="col-applicant">GREGORY WYATT</td>
+                <td class="col-imr-num"><a href="#" style="color:var(--text-action)">IMR125721</a></td>
+                <td class="col-case"><a href="#" style="color:var(--text-action)">ADJ19312422</a></td>
+                <td class="col-submitted">04/03/2026</td>
+                <td class="col-party">BROADSPIRE SERVICES</td>
+                <td class="col-specialty">Pain Management</td>
+                <td class="col-physician">Dr. Sarah Nguyen</td>
+                <td class="col-due">04/17/2026</td>
+                <td class="col-decision"><span class="de-chip de-chip--progress-dark">Pending</span></td>
+                <td class="col-rush">YES</td>
+                <td class="col-status"><span class="de-chip de-chip--progress-dark">PE...</span></td>
+                <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="grid-pagination">
+          <div class="grid-pagination__rows-label">
+            Rows per page:
+            <span style="color:var(--text-primary); font-weight:var(--font-weight-semibold);">50 <i class="fa-solid fa-caret-down" style="font-size:10px;"></i></span>
+          </div>
+          <span class="grid-pagination__info">1–50 of 3,847</span>
+          <div class="grid-pagination__nav">
+            <button class="grid-pagination__nav-btn" disabled aria-label="Previous page"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="grid-pagination__nav-btn" aria-label="Next page"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /app-content -->
+  </div><!-- /app-main -->
+
+<script>
+  (function () {
+    var sidebar   = document.getElementById('sidebar');
+    var closeBtn  = document.getElementById('sidebar-close-btn');
+    var openBtn   = document.getElementById('sidebar-open-btn');
+
+    closeBtn.addEventListener('click', function () {
+      sidebar.classList.add('is-collapsed');
+    });
+
+    openBtn.addEventListener('click', function () {
+      sidebar.classList.remove('is-collapsed');
+    });
+  })();
+</script>
+
+</body>
+</html>

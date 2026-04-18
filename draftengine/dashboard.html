@@ -93,10 +93,17 @@
     /* Table column hints */
     .de-table .col-priority { width: 80px; padding-left: 0; }
     .de-table tbody tr.is-dragging { opacity: 0.35; }
-    .de-table tbody tr.drag-over td { background: var(--grid-selected-bg); }
-    .de-table .col-desc { width: 400px; white-space: normal; }
-    .de-table td.de-table__drag { cursor: grab; }
+    .de-table tbody tr.drag-placeholder td { background: var(--grid-selected-bg); }
+    .de-table .col-desc { width: 400px; white-space: normal; cursor: pointer; }
+    .de-table tbody .col-desc:hover { text-decoration: underline; }
+    .de-table td.de-table__drag { cursor: grab; user-select: none; }
     .de-table td.de-table__drag:active { cursor: grabbing; }
+    .de-table__ghost {
+      position: fixed; pointer-events: none; z-index: 9999;
+      opacity: 0.9; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      background: var(--bg-paper); border-radius: 4px;
+      will-change: transform;
+    }
 
     /* Current Matters section */
     .section-header {
@@ -155,12 +162,12 @@
   <header class="de-appbar" id="main-appbar">
 
     <a class="de-appbar__logo" href="#">
-      <img src="../assets/logo.png" alt="DraftEngine" />
+      <img src="../assets/draftengine - logo.png" alt="DraftEngine" />
     </a>
 
     <nav class="de-appbar__nav">
-      <a class="de-appbar__nav-item is-active" href="#">Dashboard</a>
-      <a class="de-appbar__nav-item" href="#">Matters</a>
+      <a class="de-appbar__nav-item is-active" href="dashboard.html">Dashboard</a>
+      <a class="de-appbar__nav-item" href="matters.html">Matters</a>
       <a class="de-appbar__nav-item" href="#">Forms</a>
       <a class="de-appbar__nav-item" href="#">Settings</a>
     </nav>
@@ -175,8 +182,8 @@
     </div>
 
     <div class="de-appbar__mobile-menu">
-      <a class="de-appbar__mobile-item is-active" href="#">Dashboard</a>
-      <a class="de-appbar__mobile-item" href="#">Matters</a>
+      <a class="de-appbar__mobile-item is-active" href="dashboard.html">Dashboard</a>
+      <a class="de-appbar__mobile-item" href="matters.html">Matters</a>
       <a class="de-appbar__mobile-item" href="#">Forms</a>
       <a class="de-appbar__mobile-item" href="#">Settings</a>
     </div>
@@ -240,7 +247,7 @@
               <td>11/30/2025</td>
               <td>11/01/2025</td>
               <td>Action required</td>
-              <td class="col-desc">You have Packet A to complete for Bond v. Silva.</td>
+              <td class="col-desc"><a href="packet-fill.html" style="color:inherit;text-decoration:none;">You have Packet A to complete for Bond v. Silva.</a></td>
               <td>Paul Stafford</td>
               <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
             </tr>
@@ -433,55 +440,96 @@
     update();
   })();
 
-  /* ── Row drag-to-reorder ────────────────────────────── */
+  /* ── Row drag-to-reorder (pointer events — no HTML5 drag API) ── */
   (function() {
-    var tbody   = document.querySelector('.de-table tbody');
-    var dragging = null;
+    var tbody       = document.querySelector('.de-table tbody');
+    var dragging    = null;   // source <tr>
+    var ghost       = null;   // floating clone
+    var placeholder = null;   // drop-target highlight row
+    var offsetY     = 0;
+    var rafId       = null;
+    var pendingY    = 0;
 
-    // Only make a row draggable when the mousedown is on the handle cell
-    tbody.addEventListener('mousedown', function(e) {
+    function rowsArray() {
+      return Array.prototype.slice.call(tbody.querySelectorAll('tr:not(.de-table__ghost-row)'));
+    }
+
+    function rowAtY(y) {
+      var rows = rowsArray();
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i].getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) return rows[i];
+      }
+      return null;
+    }
+
+    function moveGhost(y) {
+      pendingY = y;
+      if (rafId) return;
+      rafId = requestAnimationFrame(function() {
+        rafId = null;
+        if (ghost) ghost.style.top = (pendingY - offsetY) + 'px';
+      });
+    }
+
+    function clearPlaceholder() {
+      if (placeholder) { placeholder.classList.remove('drag-placeholder'); placeholder = null; }
+    }
+
+    function cleanup() {
+      if (ghost) { ghost.remove(); ghost = null; }
+      if (dragging) { dragging.classList.remove('is-dragging'); dragging = null; }
+      clearPlaceholder();
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
+    }
+
+    function onMove(e) {
+      moveGhost(e.clientY);
+      var target = rowAtY(e.clientY);
+      if (!target || target === dragging || target === placeholder) return;
+      clearPlaceholder();
+      placeholder = target;
+      target.classList.add('drag-placeholder');
+    }
+
+    function onUp() {
+      if (placeholder && dragging) {
+        var rows    = rowsArray();
+        var fromIdx = rows.indexOf(dragging);
+        var toIdx   = rows.indexOf(placeholder);
+        if (fromIdx < toIdx) { placeholder.after(dragging); }
+        else                 { placeholder.before(dragging); }
+      }
+      cleanup();
+    }
+
+    tbody.addEventListener('pointerdown', function(e) {
+      if (!e.target.closest('.de-table__drag')) return;
       var row = e.target.closest('tr');
       if (!row) return;
-      row.draggable = !!e.target.closest('.de-table__drag');
-    });
 
-    tbody.addEventListener('dragstart', function(e) {
-      var row = e.target.closest('tr');
-      if (!row) return;
+      e.preventDefault();
       dragging = row;
       row.classList.add('is-dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
 
-    tbody.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      var row = e.target.closest('tr');
-      if (!row || row === dragging) return;
-      tbody.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
-      row.classList.add('drag-over');
-    });
+      // Build ghost: a fixed-position clone of the row's cells as a table
+      var rect = row.getBoundingClientRect();
+      offsetY  = e.clientY - rect.top;
 
-    tbody.addEventListener('dragleave', function(e) {
-      if (!tbody.contains(e.relatedTarget)) {
-        tbody.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
-      }
-    });
+      ghost = document.createElement('table');
+      ghost.className = 'de-table de-table__ghost';
+      ghost.style.width  = rect.width + 'px';
+      ghost.style.left   = rect.left + 'px';
+      ghost.style.top    = (e.clientY - offsetY) + 'px';
+      var gb = document.createElement('tbody');
+      gb.appendChild(row.cloneNode(true));
+      ghost.appendChild(gb);
+      document.body.appendChild(ghost);
 
-    tbody.addEventListener('drop', function(e) {
-      e.preventDefault();
-      var target = e.target.closest('tr');
-      if (!target || target === dragging) return;
-      var rows    = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
-      var fromIdx = rows.indexOf(dragging);
-      var toIdx   = rows.indexOf(target);
-      if (fromIdx < toIdx) { target.after(dragging); } else { target.before(dragging); }
-    });
-
-    tbody.addEventListener('dragend', function() {
-      if (dragging) { dragging.classList.remove('is-dragging'); dragging.draggable = false; }
-      tbody.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
-      dragging = null;
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup',   onUp);
     });
   })();
 

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DraftEngine — Matters</title>
+
+  <link rel="stylesheet" href="../design-system/tokens.css" />
+  <link rel="stylesheet" href="../design-system/components.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/32dfe1c9ba.js" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .page {
+      padding: 24px 80px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* ── Top bar ── */
+    .matters-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .matters-topbar .de-search { width: 380px; }
+
+    /* ── Single datagrid card ── */
+    .datagrid-panel {
+      background: none;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    /* Toolbar */
+    .grid-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-2) var(--space-3);
+      min-height: 44px;
+    }
+    .grid-toolbar__left  { display: flex; align-items: center; gap: 16px; }
+    .grid-toolbar__icon  { color: var(--text-action); font-size: 16px; cursor: pointer; }
+    .grid-toolbar__divider { width: 1px; height: 20px; background: var(--divider); }
+    .grid-toolbar__right { display: flex; align-items: center; gap: 8px; }
+    .grid-toolbar__btn {
+      display: inline-flex; align-items: center; gap: var(--space-1);
+      background: none; border: none; color: var(--text-action);
+      font-family: var(--font-family); font-size: var(--font-size-body1);
+      font-weight: var(--font-weight-bold); padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm); cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    .grid-toolbar__btn:hover { background: rgba(0,113,255,0.08); }
+
+    /* Column widths */
+    .de-table .col-toggle { width: 40px; padding: 0 4px 0 12px; }
+    .de-table .col-matter { min-width: 180px; }
+    .de-table .col-type   { min-width: 120px; }
+    .de-table .col-assign { min-width: 140px; }
+    .de-table .col-case   { min-width: 140px; }
+    .de-table .col-saved  { min-width: 160px; }
+    .de-table .col-forms  { min-width: 100px; }
+    .de-table .col-packet { min-width: 180px; }
+    .de-table .col-label  { min-width: 160px; }
+    .de-table .col-status { min-width: 140px; }
+
+    /* Expand chevron button */
+    .matter-row { cursor: pointer; }
+    .expand-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px;
+      background: none; border: none;
+      color: var(--text-secondary); font-size: 12px;
+      cursor: pointer; border-radius: var(--radius-sm);
+      transition: color var(--transition-fast), transform var(--transition-fast);
+    }
+    .matter-row:hover .expand-btn { color: var(--text-primary); }
+    .matter-row.is-expanded .expand-btn { transform: rotate(90deg); }
+
+    /* Matter detail row */
+    .matter-detail-row         { display: none; }
+    .matter-detail-row.is-open { display: table-row; }
+    .matter-detail-row > td    { padding: 0; background: none; }
+
+    /* Row backgrounds: remove */
+    .de-table tbody td { background: none; }
+    .de-table tbody tr:hover:not(.is-disabled) td { background: none; }
+
+    /* Packet rows */
+    .packet-row { cursor: pointer; }
+    .packet-row:hover { background: none; }
+    .packet-row.is-expanded .expand-btn { transform: rotate(90deg); }
+    .packet-detail-row         { display: none; }
+    .packet-detail-row.is-open { display: table-row; }
+    .form-row td { border-bottom: 1px solid var(--divider); color: var(--text-secondary); font-size: 13px; padding: 6px 12px; }
+    .form-row:last-child td { border-bottom: none; }
+
+    /* Sticky more column */
+    .de-table th.de-table__more,
+    .de-table td.de-table__more {
+      position: sticky;
+      right: 0;
+      background: none;
+      padding: var(--space-1) 16px;
+    }
+    .de-table tbody tr:hover > td.de-table__more {
+      background: var(--bg-secondary);
+    }
+
+    /* Sub-table */
+    .de-table--sub { width: 100%; }
+    .de-table--sub thead th {
+      background: var(--bg-secondary);
+      font-weight: var(--font-weight-bold);
+    }
+    /* Packet rows: hide icon, show only on that row's direct hover */
+    .packet-row td.de-table__more i { display: none; }
+    .packet-row:hover > td.de-table__more > i { display: inline; }
+
+    /* Sub-table rows: hide icon completely, show only on that row's direct hover */
+    .de-table--sub tbody td.de-table__more i,
+    .form-row td.de-table__more i { display: none; }
+    .de-table--sub tbody tr:hover > td.de-table__more > i,
+    .form-row:hover > td.de-table__more > i { display: inline; }
+
+    /* Row context menu */
+    .matter-row td.de-table__more {
+      overflow: visible;
+      cursor: pointer;
+    }
+    .row-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 2px);
+      background: var(--bg-secondary);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      padding: 4px 0;
+      min-width: 172px;
+      z-index: 300;
+      white-space: nowrap;
+    }
+    .row-menu.is-open { display: block; }
+    .row-menu__item {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; background: none; border: none;
+      color: var(--text-primary);
+      padding: 9px 16px;
+      font-family: var(--font-family);
+      font-size: var(--font-size-body2);
+      cursor: pointer; text-align: left;
+      transition: background var(--transition-fast);
+    }
+    .row-menu__item:hover { background: rgba(255,255,255,0.06); }
+    [data-theme="light"] .row-menu__item:hover { background: rgba(0,0,0,0.05); }
+    .row-menu__item--danger { color: #ff453a; }
+    .row-menu__item i { width: 16px; text-align: center; font-size: 14px; }
+
+    /* Status chips — pill */
+    .status-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 32px;
+      font-size: var(--font-size-body2); cursor: pointer;
+    }
+    .status-chip i { font-size: 10px; }
+    .status-chip--draft  { background: var(--chip-neutral-bg);       color: var(--chip-neutral-text); }
+    .status-chip--review { background: var(--chip-progress-dark-bg); color: var(--chip-progress-dark-text); }
+    .status-chip--filed  { background: var(--chip-complete-dark-bg); color: var(--chip-complete-dark-text); }
+
+    /* Clickable matter name */
+    .matter-name-link {
+      color: inherit;
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    .matter-name-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ APPBAR ═══════════════════════════════════════════════ -->
+  <header class="de-appbar" id="main-appbar">
+    <a class="de-appbar__logo" href="dashboard.html">
+      <img src="../assets/draftengine - logo.png" alt="DraftEngine" />
+    </a>
+    <nav class="de-appbar__nav">
+      <a class="de-appbar__nav-item" href="dashboard.html">Dashboard</a>
+      <a class="de-appbar__nav-item is-active" href="matters.html">Matters</a>
+      <a class="de-appbar__nav-item" href="#">Forms</a>
+      <a class="de-appbar__nav-item" href="#">Settings</a>
+    </nav>
+    <div class="de-appbar__actions">
+      <button class="de-appbar__icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()"><i id="theme-icon" class="fa-solid fa-sun-bright"></i></button>
+      <button class="de-appbar__icon-btn" title="Favorites"><i class="fa-regular fa-thumbs-up"></i></button>
+      <button class="de-appbar__icon-btn" title="Account"><i class="fa-regular fa-user"></i></button>
+      <button class="de-appbar__hamburger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    </div>
+    <div class="de-appbar__mobile-menu">
+      <a class="de-appbar__mobile-item" href="dashboard.html">Dashboard</a>
+      <a class="de-appbar__mobile-item is-active" href="matters.html">Matters</a>
+      <a class="de-appbar__mobile-item" href="#">Forms</a>
+      <a class="de-appbar__mobile-item" href="#">Settings</a>
+    </div>
+    <div class="de-appbar__mobile-backdrop"></div>
+  </header>
+  <div class="de-appbar__divider"></div>
+
+  <!-- ═══ PAGE ════════════════════════════════════════════════ -->
+  <main class="page">
+
+    <!-- Search + Create New -->
+    <div class="matters-topbar">
+      <div class="de-search">
+        <div class="de-search__field">
+          <i class="fa-solid fa-magnifying-glass de-search__icon"></i>
+          <input class="de-search__input" type="text" placeholder="Search Matters" id="matters-search" />
+          <button class="de-search__clear" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <button class="de-btn de-btn--primary">Create New</button>
+    </div>
+
+    <!-- Single datagrid card -->
+    <div class="datagrid-panel">
+
+      <div class="grid-toolbar">
+        <div class="grid-toolbar__left">
+          <i class="fa-duotone fa-solid fa-eye grid-toolbar__icon" title="Show/Hide columns"></i>
+          <i class="fa-solid fa-filter grid-toolbar__icon" title="Filter"></i>
+          <span class="grid-toolbar__divider"></span>
+          <i class="fa-regular fa-table-columns grid-toolbar__icon" title="Manage columns"></i>
+        </div>
+        <div class="grid-toolbar__right">
+          <button class="grid-toolbar__btn"><i class="fa-solid fa-down-to-line"></i> Export</button>
+          <button class="grid-toolbar__btn"><i class="fa-solid fa-rotate"></i> Reload</button>
+        </div>
+      </div>
+
+      <div class="de-table-wrap">
+        <table class="de-table">
+          <thead>
+            <tr>
+              <th class="col-toggle"></th>
+              <th class="col-matter">Matter</th>
+              <th class="col-type">Matter Type</th>
+              <th class="col-assign">Assigned To</th>
+              <th class="col-case">Case Number</th>
+              <th class="col-saved">Last Saved</th>
+              <th class="col-forms">Number of Forms</th>
+              <th class="de-table__more"></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- ── 0. Joliet v. Pittman (Civil) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Joliet v. Pittman</a></td><td>Civil</td><td>Jennifer Li</td>
+              <td>24FAM01234</td><td>09/02/2026 11:59AM</td><td>3</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>JP-001</td><td>Motion for Summary Judgment</td><td>09/02/2026 11:59AM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>JP-002</td><td>Interrogatories Response</td><td>09/03/2026 10:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>JP-003</td><td>Settlement Agreement</td><td>09/04/2026 9:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 1. Hamlin v. Gimly (Probate) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Hamlin v. Gimly</a></td><td>Probate</td><td>Jennifer Li</td>
+              <td>ADJ12345678</td><td>04/09/2026 10:01AM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PROB-001</td><td>Petition</td><td>04/09/2026 9:45AM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-001 — pg. 1 — Caption & Parties</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-001 — pg. 2 — Grounds & Prayer</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-001 — Attachment A — Supporting Facts</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PROB-002</td><td>Notice</td><td>04/09/2026 9:30AM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-002 — pg. 1 — Notice of Hearing</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-002 — Proof of Service</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PROB-003</td><td>Inventory</td><td>04/08/2026 4:15PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-003 — pg. 1 — Asset Schedule</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-003 — pg. 2 — Appraisal</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PROB-004</td><td>Accounting</td><td>04/07/2026 2:00PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-004 — pg. 1 — Income & Expenses</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-004 — pg. 2 — Balance Sheet</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PROB-005</td><td>Order</td><td>04/06/2026 11:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-005 — pg. 1 — Proposed Order</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PROB-005 — Judicial Signature Page</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 2. Mann v. Machine (PI) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Mann v. Machine</a></td><td>PI</td><td>Gina Jackson</td>
+              <td>ADJ12345678</td><td>04/08/2026 4:02PM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PI-001</td><td>Complaint</td><td>04/08/2026 3:50PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-001 — pg. 1 — General Negligence</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-001 — pg. 2 — Damages</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-001 — pg. 3 — Prayer for Relief</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PI-002</td><td>Summons</td><td>04/08/2026 3:30PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-002 — pg. 1 — Summons</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-002 — Proof of Service</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PI-003</td><td>Discovery</td><td>04/08/2026 1:00PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-003 — Set One — Interrogatories</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-003 — Set One — Requests for Production</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PI-004</td><td>Deposition</td><td>04/07/2026 9:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-004 — Notice of Deposition</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-004 — Deposition Subpoena</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PI-005</td><td>Motion</td><td>04/06/2026 4:30PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-005 — Notice of Motion</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-005 — Memorandum of Points</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PI-005 — Declaration in Support</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 3. Chip v. Steinfeld (Family) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Chip v. Steinfeld</a></td><td>Family</td><td>Jeff Kwan</td>
+              <td>ADJ12345678</td><td>04/08/2026 4:00PM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>FAM-001</td><td>Petition</td><td>04/08/2026 3:45PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-001 — pg. 1 — Caption & Parties</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-001 — pg. 2 — Grounds & Prayer</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-001 — Attachment A — Supporting Facts</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>FAM-002</td><td>Summons</td><td>04/08/2026 2:00PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-002 — pg. 1 — Summons</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-002 — Proof of Service</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>FAM-003</td><td>Declaration</td><td>04/07/2026 5:00PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-003 — pg. 1 — Declaration</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-003 — Exhibit A</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>FAM-004</td><td>Agreement</td><td>04/07/2026 10:30AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-004 — pg. 1 — Settlement Terms</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-004 — pg. 2 — Signatures</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>FAM-005</td><td>Order</td><td>04/06/2026 3:15PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-005 — pg. 1 — Proposed Order</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">FAM-005 — Judicial Signature Page</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 4. Brake v. Speed (Probate) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Brake v. Speed</a></td><td>Probate</td><td>Siera Ramirez</td>
+              <td>ADJ12345678</td><td>04/08/2026 3:25PM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS-001</td><td>Will</td><td>04/08/2026 3:10PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-001 — pg. 1 — Testamentary Provisions</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-001 — pg. 2 — Signatures & Witnesses</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS-002</td><td>Trust</td><td>04/08/2026 2:45PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-002 — pg. 1 — Trust Declaration</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-002 — Schedule A — Trust Assets</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS-003</td><td>Affidavit</td><td>04/07/2026 1:30PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-003 — pg. 1 — Affidavit</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-003 — Notarization Page</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS-004</td><td>Petition</td><td>04/06/2026 9:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-004 — pg. 1 — Caption & Parties</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-004 — pg. 2 — Grounds & Prayer</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-004 — Attachment A — Supporting Facts</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS-005</td><td>Notice</td><td>04/05/2026 4:00PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-005 — pg. 1 — Notice of Hearing</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS-005 — Proof of Service</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 5. Bateman v. Hernandez (Family) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Bateman v. Hernandez</a></td><td>Family</td><td>John Johnson</td>
+              <td>ADJ12345678</td><td>04/08/2026 3:11PM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BH-001</td><td>Petition</td><td>04/08/2026 3:00PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-001 — pg. 1 — Caption & Parties</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-001 — pg. 2 — Grounds & Prayer</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-001 — Attachment A — Supporting Facts</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BH-002</td><td>Response</td><td>04/08/2026 1:15PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-002 — pg. 1 — Response</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-002 — Attachment — Affirmative Defenses</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BH-003</td><td>Declaration</td><td>04/07/2026 3:45PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-003 — pg. 1 — Declaration</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-003 — Exhibit A</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BH-004</td><td>Income</td><td>04/07/2026 10:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-004 — Income & Expense Declaration</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-004 — Supporting Documents</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BH-005</td><td>Proposed Order</td><td>04/06/2026 2:30PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-005 — pg. 1 — Proposed Order</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BH-005 — Judicial Signature Page</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 6. Hamlin v. Gimly (Family) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Hamlin v. Gimly</a></td><td>Family</td><td>Jennifer Li</td>
+              <td>ADJ12345678</td><td>04/08/2026 2:45PM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HGF-001</td><td>Petition</td><td>04/08/2026 2:30PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-001 — pg. 1 — Caption & Parties</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-001 — pg. 2 — Grounds & Prayer</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-001 — Attachment A — Supporting Facts</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HGF-002</td><td>Summons</td><td>04/08/2026 1:00PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-002 — pg. 1 — Summons</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-002 — Proof of Service</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HGF-003</td><td>Child Support</td><td>04/07/2026 4:00PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-003 — CS-001 — Child Support Calculation</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-003 — CS-002 — Income Attachment</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HGF-004</td><td>Asset Division</td><td>04/07/2026 11:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-004 — pg. 1 — Asset Inventory</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-004 — pg. 2 — Proposed Division</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HGF-005</td><td>Decree</td><td>04/06/2026 3:00PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-005 — pg. 1 — Final Decree</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HGF-005 — pg. 2 — Orders</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 7. Hamlin v. Gimly (Family 2nd) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Hamlin v. Gimly</a></td><td>Family</td><td>Jennifer Li</td>
+              <td>ADJ12345678</td><td>04/08/2026 2:43PM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HG2-001</td><td>Petition</td><td>04/08/2026 2:30PM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-001 — pg. 1 — Caption & Parties</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-001 — pg. 2 — Grounds & Prayer</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-001 — Attachment A — Supporting Facts</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HG2-002</td><td>Response</td><td>04/08/2026 12:00PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-002 — pg. 1 — Response</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-002 — Attachment — Affirmative Defenses</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HG2-003</td><td>Custody</td><td>04/07/2026 3:00PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-003 — pg. 1 — Parenting Plan</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-003 — pg. 2 — Holiday Schedule</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HG2-004</td><td>Visitation</td><td>04/07/2026 9:30AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-004 — pg. 1 — Visitation Schedule</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-004 — Modification Request</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>HG2-005</td><td>Agreement</td><td>04/06/2026 1:00PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-005 — pg. 1 — Settlement Terms</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">HG2-005 — pg. 2 — Signatures</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 8. Brake v. Speed (Probate 2nd) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Brake v. Speed</a></td><td>Probate</td><td>Siera Ramirez</td>
+              <td>ADJ12345678</td><td>04/08/2026 10:50AM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS2-001</td><td>Will</td><td>04/08/2026 10:30AM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-001 — pg. 1 — Testamentary Provisions</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-001 — pg. 2 — Signatures & Witnesses</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS2-002</td><td>Codicil</td><td>04/08/2026 9:00AM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-002 — pg. 1 — Codicil</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-002 — Witness Attestation</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS2-003</td><td>Inventory</td><td>04/07/2026 2:15PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-003 — pg. 1 — Asset Schedule</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-003 — pg. 2 — Appraisal</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS2-004</td><td>Notice</td><td>04/06/2026 4:45PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-004 — pg. 1 — Notice of Hearing</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-004 — Proof of Service</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>BS2-005</td><td>Order</td><td>04/05/2026 11:30AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-005 — pg. 1 — Proposed Order</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">BS2-005 — Judicial Signature Page</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 9. Chip v. Steinfeld (Family 2nd) ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Chip v. Steinfeld</a></td><td>Family</td><td>Jeff Kwan</td>
+              <td>ADJ12345678</td><td>04/08/2026 8:12AM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>CS2-001</td><td>Petition</td><td>04/08/2026 8:00AM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-001 — pg. 1 — Caption & Parties</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-001 — pg. 2 — Grounds & Prayer</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-001 — Attachment A — Supporting Facts</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>CS2-002</td><td>Financial</td><td>04/07/2026 5:30PM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-002 — Financial Statement</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-002 — Tax Returns Attachment</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>CS2-003</td><td>Custody Plan</td><td>04/07/2026 2:00PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-003 — pg. 1 — Parenting Plan</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-003 — School & Activity Schedule</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>CS2-004</td><td>Declaration</td><td>04/06/2026 10:00AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-004 — pg. 1 — Declaration</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-004 — Exhibit A</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>CS2-005</td><td>Order</td><td>04/05/2026 3:30PM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-005 — pg. 1 — Proposed Order</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CS2-005 — Judicial Signature Page</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+            <!-- ── 10. Mann v. Machine (PI 2nd) — pre-expanded ── -->
+            <tr class="matter-row">
+              <td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td>
+              <td><a class="matter-name-link" href="matters-detail.html">Mann v. Machine</a></td><td>PI</td><td>Gina Jackson</td>
+              <td>ADJ12345678</td><td>04/08/2026 8:01AM</td><td>5</td>
+              <td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td>
+            </tr>
+            <tr class="matter-detail-row"><td colspan="8"><table class="de-table de-table--sub">
+              <thead><tr><th class="col-toggle"></th><th class="col-packet">Packet</th><th class="col-label">Label</th><th class="col-saved">Last Saved</th><th class="col-status">Status</th><th class="de-table__more"></th></tr></thead>
+              <tbody>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PLD-PI-001</td><td>Complaint</td><td>04/09/2026 10:21AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PLD-PI-001 — pg. 1 — General Negligence</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PLD-PI-001 — pg. 2 — Damages</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PLD-PI-001 — pg. 3 — Prayer for Relief</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>SUM-100</td><td>Summons</td><td>04/09/2026 10:14AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">SUM-100 — pg. 1 — Summons</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">SUM-100 — Proof of Service</td><td><span class="status-chip status-chip--filed" style="font-size:12px;">Filed</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>CM-010</td><td>Cover</td><td>04/09/2026 10:12AM</td><td><span class="status-chip status-chip--draft">Draft <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CM-010 — Civil Case Cover Sheet</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">CM-010 — Addendum</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PLD-PI-001(2)</td><td>Cause</td><td>04/09/2026 10:09AM</td><td><span class="status-chip status-chip--review">Review <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PLD-PI-001(2) — Cause of Action — pg. 1</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PLD-PI-001(2) — Damages Attachment</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+                <tr class="packet-row"><td class="col-toggle"><button class="expand-btn"><i class="fa-solid fa-chevron-right"></i></button></td><td>PLD-PI-001(4)</td><td>Cause</td><td>04/09/2026 10:03AM</td><td><span class="status-chip status-chip--filed">Filed <i class="fa-solid fa-caret-down"></i></span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                <tr class="packet-detail-row"><td colspan="6" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tbody>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PLD-PI-001(4) — Cause of Action — pg. 1</td><td><span class="status-chip status-chip--review" style="font-size:12px;">Review</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                  <tr class="form-row"><td style="padding-left:48px;color:var(--text-secondary);font-size:13px;">PLD-PI-001(4) — Damages Attachment</td><td><span class="status-chip status-chip--draft" style="font-size:12px;">Draft</span></td><td class="de-table__more"><i class="fa-solid fa-ellipsis-vertical"></i></td></tr>
+                </tbody></table></td></tr>
+              </tbody>
+            </table></td></tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+<script>
+  function toggleTheme() {
+    var html   = document.documentElement;
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-moon-stars' : 'fa-solid fa-sun-bright';
+  }
+
+  (function() {
+    var wrap  = document.querySelector('.de-search');
+    var input = document.getElementById('matters-search');
+    var clear = wrap.querySelector('.de-search__clear');
+    function update() { wrap.classList.toggle('de-search--has-value', input.value.length > 0); }
+    input.addEventListener('input', update);
+    clear.addEventListener('click', function() { input.value = ''; update(); input.focus(); });
+    update();
+  })();
+
+  /* ── Expand / collapse ────────────────────────────────────── */
+  (function() {
+    var rows    = Array.prototype.slice.call(document.querySelectorAll('tbody > .matter-row'));
+    var details = Array.prototype.slice.call(document.querySelectorAll('tbody > .matter-detail-row'));
+
+    rows.forEach(function(row, i) {
+      var detail = details[i];
+
+      row.addEventListener('click', function(e) {
+        if (e.target.closest('.de-table__more')) return;
+
+        var willExpand = !row.classList.contains('is-expanded');
+
+        rows.forEach(function(r, j) {
+          r.classList.remove('is-expanded');
+          details[j].classList.remove('is-open');
+        });
+
+        if (willExpand) {
+          row.classList.add('is-expanded');
+          detail.classList.add('is-open');
+        }
+      });
+    });
+  })();
+
+  /* ── Packet expand / collapse ────────────────────────────── */
+  (function() {
+    document.querySelectorAll('.de-table--sub').forEach(function(subTable) {
+      var pRows    = Array.prototype.slice.call(subTable.querySelectorAll('tbody > .packet-row'));
+      var pDetails = Array.prototype.slice.call(subTable.querySelectorAll('tbody > .packet-detail-row'));
+
+      pRows.forEach(function(row, i) {
+        var detail = pDetails[i];
+        row.addEventListener('click', function(e) {
+          if (e.target.closest('.de-table__more')) return;
+          var willExpand = !row.classList.contains('is-expanded');
+          pRows.forEach(function(r, j) {
+            r.classList.remove('is-expanded');
+            pDetails[j].classList.remove('is-open');
+          });
+          if (willExpand) {
+            row.classList.add('is-expanded');
+            detail.classList.add('is-open');
+          }
+        });
+      });
+    });
+  })();
+
+  /* ── Matter row context menu ─────────────────────────────── */
+  (function() {
+    var menuHTML = '<i class="fa-solid fa-ellipsis-vertical"></i>'
+      + '<div class="row-menu">'
+      + '<button class="row-menu__item"><i class="fa-regular fa-eye"></i> View packets</button>'
+      + '<button class="row-menu__item"><i class="fa-solid fa-plus"></i> Add a packet</button>'
+      + '<button class="row-menu__item"><i class="fa-regular fa-pen-to-square"></i> Edit matter</button>'
+      + '<button class="row-menu__item row-menu__item--danger"><i class="fa-regular fa-trash-can"></i> Delete matter</button>'
+      + '</div>';
+
+    document.querySelectorAll('.matter-row td.de-table__more').forEach(function(cell) {
+      cell.innerHTML = menuHTML;
+      var menu = cell.querySelector('.row-menu');
+      cell.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = menu.classList.contains('is-open');
+        closeAllMenus();
+        if (!isOpen) menu.classList.add('is-open');
+      });
+    });
+
+    function closeAllMenus() {
+      document.querySelectorAll('.row-menu.is-open').forEach(function(m) {
+        m.classList.remove('is-open');
+      });
+    }
+
+    document.addEventListener('click', closeAllMenus);
+  })();
+
+  /* ── Appbar hamburger ─────────────────────────────────────── */
+  (function() {
+    var bar       = document.getElementById('main-appbar');
+    var logo      = bar.querySelector('.de-appbar__logo');
+    var nav       = bar.querySelector('.de-appbar__nav');
+    var actions   = bar.querySelector('.de-appbar__actions');
+    var hamburger = bar.querySelector('.de-appbar__hamburger');
+    var menu      = bar.querySelector('.de-appbar__mobile-menu');
+    var backdrop  = bar.querySelector('.de-appbar__mobile-backdrop');
+
+    function check() {
+      var wasCollapsed = bar.classList.contains('is-collapsed');
+      if (wasCollapsed) { bar.classList.remove('is-collapsed'); nav.style.visibility = 'hidden'; }
+      var logoRect    = logo.getBoundingClientRect();
+      var navRect     = nav.getBoundingClientRect();
+      var actionsRect = actions.getBoundingClientRect();
+      var gapLeft     = navRect.left - logoRect.right;
+      var gapRight    = actionsRect.left - navRect.right;
+      if (wasCollapsed) { bar.classList.add('is-collapsed'); nav.style.visibility = ''; }
+      var shouldCollapse = gapLeft < 40 || gapRight < 40;
+      bar.classList.toggle('is-collapsed', shouldCollapse);
+      if (!shouldCollapse) bar.classList.remove('is-menu-open');
+    }
+    function positionMenu() {
+      var rect = bar.getBoundingClientRect();
+      menu.style.top = rect.bottom + 'px';
+      backdrop.style.top = rect.bottom + 'px';
+    }
+    function updateHamburgerIcon() {
+      hamburger.querySelector('i').className = bar.classList.contains('is-menu-open') ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+    }
+    function closeMenu() { bar.classList.remove('is-menu-open'); updateHamburgerIcon(); }
+    hamburger.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (bar.classList.toggle('is-menu-open')) positionMenu();
+      updateHamburgerIcon();
+    });
+    backdrop.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMenu(); });
+    new ResizeObserver(check).observe(bar);
+    check();
+    window.addEventListener('resize', function() { if (bar.classList.contains('is-menu-open')) positionMenu(); });
+  })();
+</script>
+</body>
+</html>

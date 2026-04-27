@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DraftEngine — Joliet v. Pittman</title>
+
+  <link rel="stylesheet" href="../design-system/tokens.css" />
+  <link rel="stylesheet" href="../design-system/components.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/32dfe1c9ba.js" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Matter header bar ── */
+    .matter-header {
+      background: var(--bg-tertiary);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      padding: var(--space-3);
+      box-shadow: 0 1px 10px rgba(0,0,0,0.12), 0 4px 5px rgba(0,0,0,0.14), 0 2px 4px rgba(0,0,0,0.2);
+    }
+    /* Top row: back + title group + button */
+    .matter-header__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-2) var(--space-3);
+    }
+    .matter-header__left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .matter-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .matter-back:hover { color: inherit; }
+    .matter-title-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+    }
+    .matter-title {
+      font-size: var(--font-size-h1);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .matter-edit-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 2px;
+      transition: color var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .matter-edit-btn:hover { color: var(--text-primary); }
+    /* Meta row: case info, wraps at narrow widths */
+    .matter-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-1) var(--space-3);
+      padding-left: 26px; /* align with title, past back arrow */
+    }
+    .matter-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-body1);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .matter-meta-item i {
+      font-size: 13px;
+      width: 14px;
+      text-align: center;
+    }
+
+    /* Status chip with dropdown */
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: var(--radius-xl);
+      font-size: var(--font-size-xs);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .status-chip i.caret { font-size: 8px; }
+    .status-chip--active  { background: var(--chip-complete-dark-bg); color: var(--chip-complete-dark-text); }
+    .status-chip--processing { background: var(--chip-progress-dark-bg); color: var(--chip-progress-dark-text); }
+    .status-chip--draft   { background: var(--chip-neutral-bg); color: var(--chip-neutral-text); }
+
+    /* ── Page layout ── */
+    .page {
+      padding: var(--space-4) var(--space-3) var(--space-3);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      gap: var(--space-3);
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .page__col {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 calc(50% - var(--space-3));
+      min-width: 280px;
+      min-height: 0;
+      gap: var(--space-2);
+    }
+    .page__group-label {
+      font-size: var(--font-size-body2);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 2px;
+      flex-shrink: 0;
+    }
+    .page__cards {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      flex: 1;
+    }
+
+    /* Wide: 4 cards in a horizontal row, each stretching full height */
+    @media (min-width: 1100px) {
+      body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+      .page { flex: 1; min-height: 0; flex-wrap: nowrap; max-width: none; }
+      .page__col { flex: 1 1 0; min-height: 0; }
+      .page__cards { flex-direction: row; flex: 1; min-height: 0; align-items: stretch; }
+      .detail-card { flex: 1 1 0; min-width: 0; }
+      .detail-card__body { max-height: none; flex: 1; min-height: 0; background: var(--bg-secondary); }
+    }
+
+    /* Narrow: each column stacks full-width */
+    @media (max-width: 639px) {
+      .page__col { flex: 1 1 100%; }
+    }
+
+    /* ── Card ── */
+    .detail-card {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+    .detail-card__body {
+      max-height: 249px; /* ~3 rows (83px each) */
+      overflow-y: scroll;
+      overscroll-behavior: contain;
+      /* Firefox */
+      scrollbar-width: none;
+    }
+    .detail-card:hover .detail-card__body {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(128,128,128,0.35) transparent;
+    }
+    /* WebKit: reserve fixed-width track so content never shifts */
+    .detail-card__body::-webkit-scrollbar { width: 5px; }
+    .detail-card__body::-webkit-scrollbar-track { background: transparent; }
+    .detail-card__body::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 3px;
+    }
+    .detail-card:hover .detail-card__body::-webkit-scrollbar-thumb {
+      background: rgba(128,128,128,0.35);
+    }
+    .detail-card__header {
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) var(--space-2);
+    }
+    .detail-card__title {
+      font-size: var(--font-size-h2);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+    }
+    .detail-card__header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .detail-card__icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px;
+      transition: color var(--transition-fast);
+    }
+    .detail-card__icon-btn:hover { color: var(--text-primary); }
+
+    /* Card rows */
+    .detail-card__row {
+      background: var(--bg-secondary);
+      padding: var(--space-2);
+      border-bottom: 1px solid var(--divider);
+    }
+    .detail-card__row:last-child { border-bottom: none; }
+
+    .detail-card__row-inner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .detail-card__row-text {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .detail-card__row-name {
+      font-size: var(--font-size-body1);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      white-space: normal;
+      word-break: break-word;
+    }
+    .detail-card__row-sub {
+      font-size: var(--font-size-body1);
+      color: var(--text-secondary);
+      white-space: normal;
+      word-break: break-word;
+    }
+    .detail-card__row-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+    .detail-card__row-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px;
+      transition: color var(--transition-fast);
+      position: relative;
+    }
+    .detail-card__row-btn:hover { color: var(--text-primary); }
+    .detail-card__row-btn--download { color: var(--text-secondary); }
+
+    /* Context menu */
+    .row-menu-wrap { position: relative; display: inline-flex; }
+    .row-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      box-shadow: 0 0 4px rgba(0,0,0,0.1), 0 12px 32px rgba(0,0,0,0.4);
+      padding: var(--space-1) 0;
+      min-width: 172px;
+      z-index: 300;
+      white-space: nowrap;
+    }
+    .row-menu.is-open { display: block; }
+    .row-menu__item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      padding: 9px 16px;
+      font-family: var(--font-family);
+      font-size: var(--font-size-body1);
+      cursor: pointer;
+      text-align: left;
+      transition: background var(--transition-fast);
+    }
+    .row-menu__item:hover { background: rgba(255,255,255,0.06); }
+    [data-theme="light"] .row-menu__item:hover { background: rgba(0,0,0,0.05); }
+    .row-menu__item i { width: 16px; text-align: center; font-size: 14px; }
+    .row-menu__item--danger { color: #ff453a; }
+
+    /* ── Card expand modal ── */
+    .card-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-modal.is-open { display: flex; }
+    .card-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+    }
+    .card-modal__dialog {
+      position: relative;
+      z-index: 1;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+      width: 90%;
+      max-width: 680px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .card-modal__header {
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) var(--space-2);
+      flex-shrink: 0;
+      box-shadow: 0 1px 0 var(--divider);
+    }
+    .card-modal__title {
+      font-size: var(--font-size-h1);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+    }
+    .card-modal__close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px;
+      transition: color var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .card-modal__close:hover { color: var(--text-primary); }
+    .card-modal__body { overflow-y: auto; flex: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ APPBAR ═══════════════════════════════════════════════ -->
+  <header class="de-appbar" id="main-appbar">
+    <a class="de-appbar__logo" href="dashboard.html">
+      <img src="../assets/draftengine - logo.png" alt="DraftEngine" />
+    </a>
+    <nav class="de-appbar__nav">
+      <a class="de-appbar__nav-item" href="dashboard.html">Dashboard</a>
+      <a class="de-appbar__nav-item is-active" href="matters.html">Matters</a>
+      <a class="de-appbar__nav-item" href="#">Forms</a>
+      <a class="de-appbar__nav-item" href="#">Settings</a>
+    </nav>
+    <div class="de-appbar__actions">
+      <button class="de-appbar__icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()"><i id="theme-icon" class="fa-solid fa-sun-bright"></i></button>
+      <button class="de-appbar__icon-btn" title="Favorites"><i class="fa-regular fa-thumbs-up"></i></button>
+      <button class="de-appbar__icon-btn" title="Account"><i class="fa-regular fa-user"></i></button>
+      <button class="de-appbar__hamburger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    </div>
+    <div class="de-appbar__mobile-menu">
+      <a class="de-appbar__mobile-item" href="dashboard.html">Dashboard</a>
+      <a class="de-appbar__mobile-item is-active" href="matters.html">Matters</a>
+      <a class="de-appbar__mobile-item" href="#">Forms</a>
+      <a class="de-appbar__mobile-item" href="#">Settings</a>
+    </div>
+    <div class="de-appbar__mobile-backdrop"></div>
+  </header>
+  <div class="de-appbar__divider"></div>
+
+  <!-- ═══ MATTER HEADER ════════════════════════════════════════ -->
+  <div class="matter-header">
+    <!-- Row 1: back arrow · title · status · edit · button -->
+    <div class="matter-header__top">
+      <div class="matter-header__left">
+        <a class="matter-back" href="matters.html" title="Back to Matters">
+          <i class="fa-regular fa-arrow-left"></i>
+        </a>
+        <div class="matter-title-row">
+          <span class="matter-title">Joliet v. Pittman</span>
+          <span class="status-chip status-chip--active">
+            Active <i class="fa-solid fa-caret-down caret"></i>
+          </span>
+          <button class="matter-edit-btn" title="Edit matter">
+            <i class="fa-solid fa-pencil"></i>
+          </button>
+        </div>
+      </div>
+      <button class="de-btn de-btn--primary" style="flex-shrink:0;white-space:nowrap">Full Matter Data</button>
+    </div>
+    <!-- Row 2: case metadata -->
+    <div class="matter-meta">
+      <span class="matter-meta-item">
+        <i class="fa-regular fa-suitcase"></i>
+        Case No: 24FAM01234
+      </span>
+      <span class="matter-meta-item">
+        <i class="fa-regular fa-calendar"></i>
+        Filed on: 09/02/2026
+      </span>
+      <span class="matter-meta-item">
+        <i class="fa-regular fa-user"></i>
+        Client: Taylor Joliet
+      </span>
+      <span class="matter-meta-item">
+        <i class="fa-regular fa-landmark"></i>
+        Superior Court of California, County of San Mateo
+      </span>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE ════════════════════════════════════════════════ -->
+  <div class="page">
+
+    <!-- ── Left column ── -->
+    <div class="page__col">
+      <p class="page__group-label">Case Activity</p>
+      <div class="page__cards">
+
+      <!-- Upcoming Deadlines -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">Upcoming Deadlines</span>
+          <div class="detail-card__header-actions">
+            <button class="detail-card__icon-btn" title="Add deadline"><i class="fa-solid fa-plus"></i></button>
+            <button class="detail-card__icon-btn" title="Expand" onclick="expandCard(this)"><i class="fa-regular fa-arrow-up-right-and-arrow-down-left-from-center"></i></button>
+          </div>
+        </div>
+        <div class="detail-card__body">
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Discovery Response Due</span>
+              <span class="detail-card__row-sub">Due 09/02/2026 · Interrogatories</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit deadline</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-check"></i> Mark as complete</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete deadline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Motion Hearing</span>
+              <span class="detail-card__row-sub">Due 09/03/2026 · Summary Judgement</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit deadline</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-check"></i> Mark as complete</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete deadline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Expert Witness Deadline</span>
+              <span class="detail-card__row-sub">Due 09/04/2026 · Technical Expert</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit deadline</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-check"></i> Mark as complete</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete deadline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Pre-Trial Conference</span>
+              <span class="detail-card__row-sub">Due 09/10/2026 · Judge's Order</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit deadline</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-check"></i> Mark as complete</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete deadline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Mediation Session</span>
+              <span class="detail-card__row-sub">Due 09/15/2026 · Settlement</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit deadline</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-check"></i> Mark as complete</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete deadline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Trial Start Date</span>
+              <span class="detail-card__row-sub">Due 09/22/2026 · Civil Trial</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit deadline</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-check"></i> Mark as complete</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete deadline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /detail-card__body -->
+      </div>
+
+      <!-- Note & Activity Log -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">Notes &amp; Activity Log</span>
+          <div class="detail-card__header-actions">
+            <button class="detail-card__icon-btn" title="Add note"><i class="fa-solid fa-plus"></i></button>
+            <button class="detail-card__icon-btn" title="Expand" onclick="expandCard(this)"><i class="fa-regular fa-arrow-up-right-and-arrow-down-left-from-center"></i></button>
+          </div>
+        </div>
+        <div class="detail-card__body">
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Reviewed expert report findings.</span>
+              <span class="detail-card__row-sub">09/02/2026 11:59AM · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit note</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete note</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Client meeting completed.</span>
+              <span class="detail-card__row-sub">08/02/2026 10:40AM · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit note</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete note</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Deposition completed with defendant's CEO.</span>
+              <span class="detail-card__row-sub">07/28/2026 4:28PM · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit note</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete note</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Discovery documents reviewed and filed.</span>
+              <span class="detail-card__row-sub">07/15/2026 1:30PM · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit note</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete note</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Witness list submitted to court.</span>
+              <span class="detail-card__row-sub">06/28/2026 9:15AM · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit note</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete note</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Settlement demand letter sent to opposing counsel.</span>
+              <span class="detail-card__row-sub">06/20/2026 3:45PM · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Edit note</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete note</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /detail-card__body -->
+      </div>
+
+      </div><!-- /page__cards -->
+    </div><!-- /left col -->
+
+    <!-- ── Right column ── -->
+    <div class="page__col">
+      <p class="page__group-label">Documents</p>
+      <div class="page__cards">
+
+      <!-- Packets needs review -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">Packets to Review</span>
+          <div class="detail-card__header-actions">
+            <button class="detail-card__icon-btn" title="Add packet"><i class="fa-solid fa-plus"></i></button>
+            <button class="detail-card__icon-btn" title="Expand" onclick="expandCard(this)"><i class="fa-regular fa-arrow-up-right-and-arrow-down-left-from-center"></i></button>
+          </div>
+        </div>
+        <div class="detail-card__body">
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Motion for Summary Judgment</span>
+              <span class="detail-card__row-sub">Modified 09/02/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <span class="status-chip status-chip--processing">Processing</span>
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Rename packet</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-plus"></i> Add form to packet</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete packet</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Interrogatories Response</span>
+              <span class="detail-card__row-sub">Modified 09/03/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <span class="status-chip status-chip--draft">Draft</span>
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Rename packet</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-plus"></i> Add form to packet</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete packet</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Settlement Agreement</span>
+              <span class="detail-card__row-sub">Modified 09/04/2026 · Vera Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <span class="status-chip status-chip--draft">Draft</span>
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Rename packet</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-plus"></i> Add form to packet</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete packet</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Discovery Request</span>
+              <span class="detail-card__row-sub">Modified 09/05/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <span class="status-chip status-chip--draft">Draft</span>
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Rename packet</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-plus"></i> Add form to packet</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete packet</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Motion to Compel</span>
+              <span class="detail-card__row-sub">Modified 09/06/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <span class="status-chip status-chip--draft">Draft</span>
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-pencil"></i> Rename packet</button>
+                  <button class="row-menu__item"><i class="fa-solid fa-plus"></i> Add form to packet</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete packet</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /detail-card__body -->
+      </div>
+
+      <!-- Completed Packets -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">Completed Packets</span>
+          <div class="detail-card__header-actions">
+            <button class="detail-card__icon-btn" title="Expand" onclick="expandCard(this)"><i class="fa-regular fa-arrow-up-right-and-arrow-down-left-from-center"></i></button>
+          </div>
+        </div>
+        <div class="detail-card__body">
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Expert Report – Technical Analysis</span>
+              <span class="detail-card__row-sub">09/02/2026 · Johannes Schlaft</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-arrow-down-to-line"></i> Download</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete file</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">CEO Deposition Transcript</span>
+              <span class="detail-card__row-sub">07/29/2026 · Bob Thomas</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-arrow-down-to-line"></i> Download</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete file</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Contract Amendment 2026</span>
+              <span class="detail-card__row-sub">07/23/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-arrow-down-to-line"></i> Download</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete file</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Financial Records Q2</span>
+              <span class="detail-card__row-sub">07/02/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-arrow-down-to-line"></i> Download</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete file</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Email Communications</span>
+              <span class="detail-card__row-sub">07/01/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-arrow-down-to-line"></i> Download</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete file</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Witness Statements</span>
+              <span class="detail-card__row-sub">06/15/2026 · Jennifer Li</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-arrow-down-to-line"></i> Download</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete file</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card__row">
+          <div class="detail-card__row-inner">
+            <div class="detail-card__row-text">
+              <span class="detail-card__row-name">Medical Records Summary</span>
+              <span class="detail-card__row-sub">06/01/2026 · Bob Thomas</span>
+            </div>
+            <div class="detail-card__row-actions">
+              <div class="row-menu-wrap">
+                <button class="detail-card__row-btn" title="More options" onclick="toggleMenu(this)">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="row-menu">
+                  <button class="row-menu__item"><i class="fa-solid fa-arrow-down-to-line"></i> Download</button>
+                  <button class="row-menu__item row-menu__item--danger"><i class="fa-solid fa-trash-can"></i> Delete file</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /detail-card__body -->
+      </div>
+
+      </div><!-- /page__cards -->
+    </div><!-- /right col -->
+
+  </div><!-- /page -->
+
+  <!-- ═══ CARD EXPAND MODAL ═══════════════════════════════════ -->
+  <div id="card-modal" class="card-modal" role="dialog" aria-modal="true">
+    <div class="card-modal__backdrop"></div>
+    <div class="card-modal__dialog">
+      <div class="card-modal__header">
+        <span class="card-modal__title" id="card-modal-title"></span>
+        <button class="card-modal__close" title="Close" onclick="closeCardModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="card-modal__body" id="card-modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Theme toggle ── */
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.dataset.theme === 'dark';
+      html.dataset.theme = isDark ? 'light' : 'dark';
+      document.getElementById('theme-icon').className = isDark
+        ? 'fa-solid fa-moon' : 'fa-solid fa-sun-bright';
+    }
+
+    /* ── Context menus ── */
+    function toggleMenu(btn) {
+      const menu = btn.nextElementSibling;
+      const isOpen = menu.classList.contains('is-open');
+      // Close all open menus
+      document.querySelectorAll('.row-menu.is-open').forEach(m => m.classList.remove('is-open'));
+      if (!isOpen) menu.classList.add('is-open');
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.row-menu-wrap')) {
+        document.querySelectorAll('.row-menu.is-open').forEach(m => m.classList.remove('is-open'));
+      }
+    });
+
+    /* ── Card expand modal ── */
+    function expandCard(btn) {
+      const card = btn.closest('.detail-card');
+      const title    = card.querySelector('.detail-card__title').textContent;
+      const cardBody = card.querySelector('.detail-card__body');
+
+      document.getElementById('card-modal-title').textContent = title;
+
+      const body = document.getElementById('card-modal-body');
+      body.innerHTML = '';
+      if (cardBody) body.appendChild(cardBody.cloneNode(true));
+
+      document.getElementById('card-modal').classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCardModal() {
+      document.getElementById('card-modal').classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('card-modal').querySelector('.card-modal__backdrop')
+      .addEventListener('click', closeCardModal);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeCardModal();
+    });
+
+    /* ── Appbar hamburger ── */
+    (function() {
+      var bar       = document.getElementById('main-appbar');
+      var logo      = bar.querySelector('.de-appbar__logo');
+      var nav       = bar.querySelector('.de-appbar__nav');
+      var actions   = bar.querySelector('.de-appbar__actions');
+      var hamburger = bar.querySelector('.de-appbar__hamburger');
+      var menu      = bar.querySelector('.de-appbar__mobile-menu');
+      var backdrop  = bar.querySelector('.de-appbar__mobile-backdrop');
+
+      function check() {
+        var wasCollapsed = bar.classList.contains('is-collapsed');
+        if (wasCollapsed) { bar.classList.remove('is-collapsed'); nav.style.visibility = 'hidden'; }
+        var logoRect    = logo.getBoundingClientRect();
+        var navRect     = nav.getBoundingClientRect();
+        var actionsRect = actions.getBoundingClientRect();
+        var gapLeft     = navRect.left - logoRect.right;
+        var gapRight    = actionsRect.left - navRect.right;
+        if (wasCollapsed) { bar.classList.add('is-collapsed'); nav.style.visibility = ''; }
+        var shouldCollapse = gapLeft < 40 || gapRight < 40;
+        bar.classList.toggle('is-collapsed', shouldCollapse);
+        if (!shouldCollapse) bar.classList.remove('is-menu-open');
+      }
+
+      function positionMenu() {
+        var rect = bar.getBoundingClientRect();
+        menu.style.top     = rect.bottom + 'px';
+        backdrop.style.top = rect.bottom + 'px';
+      }
+
+      function updateHamburgerIcon() {
+        hamburger.querySelector('i').className = bar.classList.contains('is-menu-open') ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+      }
+
+      function closeMenu() { bar.classList.remove('is-menu-open'); updateHamburgerIcon(); }
+
+      hamburger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (bar.classList.toggle('is-menu-open')) positionMenu();
+        updateHamburgerIcon();
+      });
+
+      backdrop.addEventListener('click', closeMenu);
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMenu(); });
+
+      var ro = new ResizeObserver(check);
+      ro.observe(bar);
+      check();
+
+      window.addEventListener('resize', function() { if (bar.classList.contains('is-menu-open')) positionMenu(); });
+    })();
+  </script>
+</body>
+</html>

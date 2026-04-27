@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DraftEngine — Reviewing Forms · Bond v. Silva</title>
+
+  <link rel="stylesheet" href="../design-system/tokens.css" />
+  <link rel="stylesheet" href="../design-system/components.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/32dfe1c9ba.js" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .rv-header {
+      height: 64px;
+      background: linear-gradient(92.25deg, #DA8427 0%, #D34A00 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-3);
+      gap: var(--space-2);
+      flex-shrink: 0;
+    }
+    .rv-header__back {
+      background: none; border: none;
+      color: var(--appbar-icon);
+      font-size: 14px; cursor: pointer;
+      padding: 8px; display: flex; align-items: center;
+      text-decoration: none; flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      transition: opacity var(--transition-fast);
+    }
+    .rv-header__back:hover { opacity: 0.7; }
+    .rv-header__title {
+      flex: 1; min-width: 0;
+      font-size: var(--font-size-body1);
+      color: var(--appbar-text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rv-header__actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .rv-header__icon-btn {
+      background: none; border: none;
+      color: var(--appbar-icon); font-size: 15px;
+      cursor: pointer; padding: 8px;
+      display: flex; align-items: center;
+      border-radius: var(--radius-sm);
+      transition: opacity var(--transition-fast);
+    }
+    .rv-header__icon-btn:hover { opacity: 0.7; }
+
+    /* LAYOUT */
+    .rv-layout { flex: 1; display: flex; overflow: hidden; }
+
+    /* LEFT SIDEBAR */
+    .rv-left {
+      width: 255px; flex-shrink: 0;
+      background: var(--bg-tertiary);
+      overflow: hidden;
+      padding: var(--space-2);
+      display: flex; flex-direction: column;
+      transition: width 0.2s ease, padding 0.2s ease;
+    }
+    .rv-left.is-collapsed { width: 0; overflow: hidden; padding: 0; }
+
+    .rv-left__list {
+      flex: 1; min-height: 0;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    /* Accordion card */
+    .rv-acc {
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .rv-acc.is-expanded {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+    }
+    .rv-acc.rv-acc--muted { background: rgba(33,33,33,0.6); }
+
+    .rv-acc__header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: var(--space-2);
+      gap: var(--space-1);
+      cursor: pointer; flex-shrink: 0;
+      border-radius: var(--radius-md);
+      transition: background var(--transition-fast);
+    }
+    .rv-acc__header:hover { background: rgba(255,255,255,0.12); }
+    [data-theme="light"] .rv-acc__header:hover { background: rgba(0,0,0,0.10); }
+
+    /* Expanded accordion: hovering the header highlights the entire card */
+    .rv-acc.is-expanded:has(.rv-acc__header:hover) { background: rgba(255,255,255,0.10); }
+    .rv-acc.is-expanded:has(.rv-acc__header:hover) .rv-acc__header { background: transparent; }
+    [data-theme="light"] .rv-acc.is-expanded:has(.rv-acc__header:hover) { background: rgba(0,0,0,0.08); }
+    [data-theme="light"] .rv-acc.is-expanded:has(.rv-acc__header:hover) .rv-acc__header { background: transparent; }
+
+    .rv-acc__header-left { display: flex; align-items: center; gap: var(--space-1); }
+    .rv-acc__title-wrap { display: flex; flex-direction: column; gap: 1px; }
+    .rv-acc__title {
+      font-size: var(--font-size-body1);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+    }
+    .rv-acc__sub {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text-disabled);
+    }
+    .rv-acc__chevron { color: var(--text-secondary); font-size: 12px; }
+
+    .rv-acc__body {
+      display: none;
+      flex-direction: column;
+      gap: var(--space-2);
+      padding: 0 var(--space-2) var(--space-2);
+    }
+    .rv-acc.is-expanded .rv-acc__body {
+      display: flex; flex: 1; min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(128,128,128,0.3) transparent;
+    }
+
+    /* Sub-form sections within a group accordion */
+    .rv-subgroup { display: flex; flex-direction: column; gap: var(--space-2); }
+    .rv-subgroup + .rv-subgroup {
+      margin-top: var(--space-1);
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--divider);
+    }
+    .rv-subgroup__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+    }
+    .rv-subgroup__sub {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: var(--text-disabled);
+      opacity: 0.7;
+      margin-top: 1px;
+    }
+
+    /* Thumbnails */
+    .rv-thumb { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+    .rv-thumb__wrap { position: relative; width: 100%; }
+    .rv-thumb__img {
+      width: 100%;
+      aspect-ratio: 1920 / 2458;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: none; display: block;
+      background: var(--bg-page);
+    }
+    .rv-thumb.is-active .rv-thumb__img { border: 4px solid #A1A1A1; }
+    .rv-thumb__num {
+      font-size: var(--font-size-body1);
+      color: var(--text-primary);
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .rv-thumb.is-active .rv-thumb__num {
+      background: #DA8427; color: #fff; font-weight: 700;
+    }
+
+    /* MAIN WRAPPER (center + right, shares the doc header) */
+    .rv-main {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; min-width: 0;
+    }
+    .rv-body {
+      flex: 1; display: flex; overflow: hidden; position: relative;
+    }
+
+    /* CENTER */
+    .rv-center {
+      flex: 1; display: flex; flex-direction: column;
+      min-width: 0; position: relative;
+    }
+
+    .rv-doc-header {
+      height: 52px;
+      background: var(--bg-quaternary);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-2);
+      gap: var(--space-2);
+      border-bottom: 1px solid var(--divider);
+      flex-shrink: 0;
+    }
+
+    .rv-panel-toggle {
+      background: none; border: none;
+      color: var(--text-secondary); font-size: 14px;
+      cursor: pointer; padding: 6px;
+      display: flex; align-items: center;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .rv-panel-toggle:hover { background: rgba(255,255,255,0.07); color: var(--text-primary); }
+    [data-theme="light"] .rv-panel-toggle:hover { background: rgba(0,0,0,0.06); }
+
+    .rv-viewer {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 20; overflow: hidden;
+      background: var(--bg-page);
+      cursor: grab;
+    }
+    .rv-viewer.is-dragging { cursor: grabbing; }
+
+    .rv-scroll-container {
+      width: 667px;
+      display: flex; flex-direction: column;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    /* Top-level form group label */
+    .rv-form-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding: var(--space-4) 0 var(--space-2);
+    }
+    .rv-form-label:first-child { padding-top: 0; }
+    .rv-form-desc {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      text-transform: none;
+      color: var(--text-disabled);
+      margin-top: 2px;
+    }
+
+    /* Sub-form label within a group — visually subordinate */
+    .rv-subform-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+      display: flex; align-items: center; gap: 6px;
+      padding: var(--space-3) 0 var(--space-1);
+    }
+    .rv-subform-desc {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: var(--text-disabled);
+      opacity: 0.7;
+    }
+    .rv-subform-label::before {
+      content: '';
+      display: inline-block;
+      width: 2px; height: 10px;
+      background: currentColor;
+      border-radius: 1px;
+      opacity: 0.6;
+    }
+
+    .rv-page-section { margin-bottom: var(--space-3); }
+    .rv-page-section:last-child { margin-bottom: 0; }
+
+    .rv-doc-img {
+      width: 100%; height: 100%; display: block;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+    [data-theme="light"] .rv-doc-img { box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+
+    /*
+     * Overlay wrapper — holds exact image ratio so %-positions map to real pixels.
+     * All coordinates derived by pixel-scanning the actual PNG (1334 × 1728).
+     */
+    .rv-doc-wrap {
+      position: relative;
+      aspect-ratio: 1334 / 1728;
+      container-type: inline-size;
+    }
+    .rv-overlay-field {
+      position: absolute;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--font-family);
+      font-size: 1.1cqw;          /* scales 1:1 with container / zoom */
+      color: #1a1a1a;
+      padding: 2px 0.4cqw;
+      box-sizing: content-box;
+      margin-top: -2px;
+      overflow: hidden;
+      white-space: nowrap;
+      line-height: 1;
+      border-radius: 2px;
+      cursor: text;
+      transition: background 0.12s ease;
+    }
+    .rv-overlay-field:focus,
+    .rv-overlay-field.is-synced-active {
+      background: rgba(218,132,39,0.15);
+      box-shadow: inset 0 0 0 1.5px rgba(218,132,39,0.7);
+    }
+
+    /* Right-panel field highlighted when its overlay counterpart is active */
+    .de-field.is-synced-active .de-field__input {
+      border-bottom: 2px solid var(--input-focused);
+      padding-bottom: 7px;
+    }
+    .de-field.is-synced-active .de-field__label {
+      color: var(--input-focused);
+    }
+
+    /* Zoom bar */
+    .rv-resize {
+      position: absolute;
+      bottom: var(--space-2); left: var(--space-2);
+      display: flex; z-index: 25;
+    }
+    .rv-resize__main {
+      background: rgba(20,20,20,0.55);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 8px 8px 16px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+    }
+    .rv-resize__btn {
+      background: none; border: none;
+      color: #ffffff; font-size: 12px;
+      cursor: pointer; padding: 0; line-height: 1;
+      display: flex; align-items: center;
+    }
+    .rv-resize__btn:hover { opacity: 0.7; }
+    .rv-resize__btn.is-active { opacity: 1; }
+    .rv-resize input[type="range"] {
+      width: 58px; accent-color: #DA8427; cursor: pointer; margin: 0;
+    }
+
+    /* RIGHT PANEL */
+    .rv-right {
+      width: 271px; flex-shrink: 0;
+      position: relative; z-index: 30;
+      background: var(--bg-tertiary);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      transition: width 0.2s ease;
+    }
+    .rv-right.is-collapsed { width: 0; overflow: hidden; }
+    .rv-right__header {
+      flex-shrink: 0;
+      padding: var(--space-3) var(--space-2) var(--space-1);
+      display: flex; flex-direction: column;
+      gap: var(--space-1);
+      border-bottom: 1px solid var(--divider);
+    }
+    .rv-right__scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-1) var(--space-2) var(--space-3);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(128,128,128,0.3) transparent;
+    }
+
+    .rv-matter__title-row {
+      display: flex; align-items: center;
+      gap: var(--space-2); margin-bottom: var(--space-2);
+    }
+    .rv-matter__name {
+      font-size: var(--font-size-body2);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+    }
+    .rv-matter__table { display: flex; gap: var(--space-2); }
+    .rv-matter__col { display: flex; flex-direction: column; gap: var(--space-1); }
+    .rv-matter__label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+    .rv-matter__value { font-size: 12px; color: var(--text-primary); white-space: nowrap; }
+    .rv-matter__value--wrap { white-space: normal; word-break: break-word; }
+
+    .rv-divider { border: none; border-top: 1px solid var(--divider); }
+    .rv-fields { display: flex; flex-direction: column; gap: var(--space-2); }
+
+    /* FORM CURRENCY / TRUST SIGNALS */
+    .rv-forms-status {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600;
+      color: #4ade80;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      opacity: 0.9;
+    }
+    .rv-forms-status i { font-size: 11px; }
+    [data-theme="light"] .rv-forms-status { color: #16a34a; }
+
+    /* Per-form verified badge inside accordion title-wrap */
+    .rv-acc__verified {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 9px; font-weight: 600;
+      color: #4ade80;
+      letter-spacing: 0.02em;
+      margin-top: 2px;
+      opacity: 0.8;
+    }
+    .rv-acc__verified i { font-size: 8px; }
+    .rv-acc__verified--stack { flex-direction: column; gap: 2px; align-items: flex-start; }
+    [data-theme="light"] .rv-acc__verified { color: #16a34a; }
+
+    /* Three-state field rows */
+    .rv-field-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rv-field-row .de-field { flex: 1; min-width: 0; }
+
+    .de-field__src {
+      width: 13px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      position: relative;
+      cursor: default;
+    }
+    .de-field__src-cms   { display: none; color: rgba(74,  222, 128, 0.75); }
+    .de-field__src-manual{ display: none; color: rgba(251, 191,  36, 0.85); }
+    .de-field__src-empty { display: none; color: rgba(148, 163, 184, 0.5); }
+    .rv-field-row--cms    .de-field__src-cms    { display: block; }
+    .rv-field-row--manual .de-field__src-manual { display: block; }
+    .rv-field-row--empty  .de-field__src-empty  { display: block; }
+    [data-theme="light"] .de-field__src-cms    { color: rgba(22,  163,  74, 0.9); }
+    [data-theme="light"] .de-field__src-manual { color: rgba(217, 119,   6, 0.9); }
+    [data-theme="light"] .de-field__src-empty  { color: rgba(100, 116, 139, 0.5); }
+
+    /* Tooltip (body-level element, escapes overflow clipping) */
+    #rv-tip {
+      position: fixed;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      padding: 5px 9px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.28);
+      border: 1px solid var(--divider);
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s ease;
+    }
+    #rv-tip.is-visible { opacity: 1; }
+
+
+    /* Per-form verified badge in center scroll labels */
+    .rv-form-verified {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 600;
+      color: #4ade80;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+    .rv-form-verified i { font-size: 10px; }
+    [data-theme="light"] .rv-form-verified { color: #16a34a; }
+
+    /* Filter chip dropdown */
+    .rv-filter-dropdown { position: relative; align-self: flex-start; margin-top: 4px; }
+    .rv-filter-trigger {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 8px 6px 9px;
+      border-radius: 32px;
+      border: 1px solid var(--divider);
+      background: rgba(128,128,128,0.12);
+      color: rgba(255,255,255,0.85);
+      font-family: var(--font-family);
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: background var(--transition-fast), color var(--transition-fast);
+      white-space: nowrap;
+    }
+    [data-theme="light"] .rv-filter-trigger { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.8); }
+    .rv-filter-trigger:hover { background: rgba(128,128,128,0.2); color: var(--text-primary); }
+    [data-theme="light"] .rv-filter-trigger:hover { background: rgba(0,0,0,0.1); }
+    .rv-filter-trigger.is-open { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+    [data-theme="light"] .rv-filter-trigger.is-open { background: rgba(0,0,0,0.06); }
+    .rv-filter-trigger__chevron { font-size: 8px; opacity: 0.5; transition: transform var(--transition-fast); }
+    .rv-filter-trigger.is-open .rv-filter-trigger__chevron { transform: rotate(180deg); }
+    .rv-filter-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      padding: 4px 0;
+      min-width: 152px;
+      z-index: 400;
+    }
+    .rv-filter-menu.is-open { display: block; }
+    .rv-filter-option {
+      display: flex; align-items: center; gap: 9px;
+      width: 100%; background: none; border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-family);
+      font-size: 12px; font-weight: 500;
+      padding: 7px 14px;
+      cursor: pointer; text-align: left;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .rv-filter-option:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+    [data-theme="light"] .rv-filter-option:hover { background: rgba(0,0,0,0.04); }
+    .rv-filter-option.is-selected { color: var(--text-primary); font-weight: 600; }
+    .rv-filter-option.is-selected .rv-filter-check { opacity: 1; }
+    .rv-filter-check { font-size: 9px; margin-left: auto; opacity: 0; }
+    .rv-filter-option__icon { font-size: 10px; width: 12px; text-align: center; flex-shrink: 0; }
+    .rv-filter-option__icon--cms    { color: #4ade80; }
+    .rv-filter-option__icon--manual { color: #fbbf24; }
+    .rv-filter-option__icon--empty  { color: rgba(148, 163, 184, 0.65); }
+    [data-theme="light"] .rv-filter-option__icon--cms    { color: #16a34a; }
+    [data-theme="light"] .rv-filter-option__icon--manual { color: #d97706; }
+    [data-theme="light"] .rv-filter-option__icon--empty  { color: rgba(100, 116, 139, 0.7); }
+
+    /* Filing deadline pill */
+    .rv-deadline {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255, 69, 58, 0.14);
+      border: 1px solid rgba(255, 69, 58, 0.22);
+      color: #ff453a;
+      font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 32px;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    [data-theme="light"] .rv-deadline {
+      background: rgba(200, 0, 10, 0.08);
+      border-color: rgba(200, 0, 10, 0.18);
+      color: #c8000a;
+    }
+    .rv-deadline i { font-size: 10px; }
+
+    /* Missing required fields banner */
+    .rv-missing-banner {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255, 69, 58, 0.10);
+      border: 1px solid rgba(255, 69, 58, 0.22);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 12px; font-weight: 600;
+      color: #ff453a;
+      margin-bottom: var(--space-2);
+      flex-shrink: 0;
+    }
+    [data-theme="light"] .rv-missing-banner {
+      background: rgba(200, 0, 10, 0.07);
+      border-color: rgba(200, 0, 10, 0.18);
+      color: #c8000a;
+    }
+    .rv-missing-banner i { font-size: 12px; flex-shrink: 0; }
+    .rv-missing-banner.is-hidden { display: none; }
+
+    /* Required-but-empty field state */
+    .de-field.is-required-empty .de-field__label::after {
+      content: ' *';
+      color: #ff453a;
+    }
+    [data-theme="light"] .de-field.is-required-empty .de-field__label::after {
+      color: #c8000a;
+    }
+    .de-field.is-required-empty .de-field__input,
+    .de-field.is-required-empty .de-field__input:hover:not(:focus):not(:disabled) {
+      border-bottom-color: rgba(255, 69, 58, 0.6);
+    }
+    [data-theme="light"] .de-field.is-required-empty .de-field__input,
+    [data-theme="light"] .de-field.is-required-empty .de-field__input:hover:not(:focus):not(:disabled) {
+      border-bottom-color: rgba(200, 0, 10, 0.45);
+    }
+
+    /* Deadline countdown — lives in the doc-header bar */
+    .rv-countdown {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600;
+      color: #ff453a;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    [data-theme="light"] .rv-countdown { color: #c8000a; }
+    .rv-countdown i { font-size: 10px; }
+    .rv-countdown__detail {
+      font-weight: 400;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    /* Interactive missing banner */
+    .rv-missing-banner {
+      cursor: pointer;
+      align-items: center;
+      transition: background var(--transition-fast), border-color var(--transition-fast);
+    }
+    .rv-missing-banner__text { flex: 1; min-width: 0; }
+    .rv-missing-banner:hover { background: rgba(255, 69, 58, 0.16); }
+    [data-theme="light"] .rv-missing-banner:hover { background: rgba(200, 0, 10, 0.12); }
+    .rv-missing-banner__cta {
+      flex-shrink: 0;
+      white-space: nowrap;
+      margin-left: auto;
+      padding-left: 6px;
+      font-size: 11px; font-weight: 400;
+      display: flex; align-items: center; gap: 4px;
+      opacity: 0.7;
+    }
+    .rv-missing-banner:hover .rv-missing-banner__cta { opacity: 1; }
+
+    /* Active (reviewing) state — banner becomes the exit */
+    .rv-missing-banner.is-reviewing {
+      background: rgba(255, 69, 58, 0.18);
+      border-color: rgba(255, 69, 58, 0.4);
+    }
+    [data-theme="light"] .rv-missing-banner.is-reviewing {
+      background: rgba(200, 0, 10, 0.12);
+      border-color: rgba(200, 0, 10, 0.3);
+    }
+    .rv-missing-banner.is-reviewing .rv-missing-banner__cta { opacity: 1; }
+
+    /* Filter mode: hide rows whose field is not empty-required */
+    .rv-fields.is-filter-mode .rv-field-row { display: none; }
+    .rv-fields.is-filter-mode .rv-field-row:has(.de-field.is-required-empty) { display: flex; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) { .rv-right { display: none; } }
+    @media (max-width: 600px) {
+      .rv-left { display: none; }
+      .rv-header__title { font-size: var(--font-size-body3); }
+      .rv-viewer { padding: var(--space-2) var(--space-1); }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="rv-header">
+    <a class="rv-header__back" href="dashboard.html" title="Back">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <span class="rv-header__title">
+      Dissolution of Marriage Packet — Bond v. Silva
+    </span>
+    <div class="rv-header__actions">
+      <button class="rv-header__icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+        <i id="theme-icon" class="fa-solid fa-sun-bright"></i>
+      </button>
+      <button class="rv-header__icon-btn" title="Favorites">
+        <i class="fa-regular fa-thumbs-up"></i>
+      </button>
+      <button class="rv-header__icon-btn" title="Account">
+        <i class="fa-regular fa-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="rv-layout">
+
+    <!-- LEFT: accordion panel -->
+    <aside class="rv-left" id="rv-left">
+      <div class="rv-left__list">
+
+        <!-- FL-100 — starts expanded -->
+        <div class="rv-acc is-expanded" id="acc-fl100">
+          <div class="rv-acc__header" onclick="toggleAcc(this)">
+            <div class="rv-acc__header-left">
+              <div class="rv-acc__title-wrap">
+                <span class="rv-acc__title">FL-100 · Petition for Dissolution</span>
+                <span class="rv-acc__sub">Marriage / Domestic Partnership</span>
+                <span class="rv-acc__verified"><i class="fa-solid fa-circle-check"></i> Rev. Apr 21, 2026</span>
+              </div>
+            </div>
+            <i class="fa-solid fa-angle-up rv-acc__chevron"></i>
+          </div>
+          <div class="rv-acc__body">
+            <div class="rv-thumb is-active" data-form="fl100" data-page="1" onclick="scrollToPage('fl100',1)">
+              <div class="rv-thumb__wrap">
+                <img class="rv-thumb__img" src="https://www.figma.com/api/mcp/asset/cb46baf0-e046-455f-9ec6-e681ca0f47db" alt="FL-100 page 1" />
+              </div>
+              <span class="rv-thumb__num">1</span>
+            </div>
+            <div class="rv-thumb" data-form="fl100" data-page="2" onclick="scrollToPage('fl100',2)">
+              <div class="rv-thumb__wrap">
+                <img class="rv-thumb__img" src="https://www.figma.com/api/mcp/asset/650e7fcb-021f-4a54-a327-02ebd6055b13" alt="FL-100 page 2" />
+              </div>
+              <span class="rv-thumb__num">2</span>
+            </div>
+            <div class="rv-thumb" data-form="fl100" data-page="3" onclick="scrollToPage('fl100',3)">
+              <div class="rv-thumb__wrap">
+                <img class="rv-thumb__img" src="https://www.figma.com/api/mcp/asset/617e4115-6c0b-4f51-bcb1-562275d9ea07" alt="FL-100 page 3" />
+              </div>
+              <span class="rv-thumb__num">3</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- FL-101 — collapsed -->
+        <div class="rv-acc rv-acc--muted" id="acc-fl101">
+          <div class="rv-acc__header" onclick="toggleAcc(this)">
+            <div class="rv-acc__header-left">
+              <div class="rv-acc__title-wrap">
+                <span class="rv-acc__title">FL-101 · Summons</span>
+                <span class="rv-acc__sub">Family Law</span>
+                <span class="rv-acc__verified"><i class="fa-solid fa-circle-check"></i> Rev. Apr 21, 2026</span>
+              </div>
+            </div>
+            <i class="fa-solid fa-angle-down rv-acc__chevron"></i>
+          </div>
+          <div class="rv-acc__body">
+            <div class="rv-thumb" data-form="fl101" data-page="1" onclick="scrollToPage('fl101',1)">
+              <div class="rv-thumb__wrap">
+                <img class="rv-thumb__img" src="https://www.figma.com/api/mcp/asset/cb46baf0-e046-455f-9ec6-e681ca0f47db" alt="FL-101 page 1" />
+              </div>
+              <span class="rv-thumb__num">1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marriage form group — collapsed, two sub-forms inside -->
+        <div class="rv-acc rv-acc--muted" id="acc-marriage">
+          <div class="rv-acc__header" onclick="toggleAcc(this)">
+            <div class="rv-acc__header-left">
+              <div class="rv-acc__title-wrap">
+                <span class="rv-acc__title">Declaration of Disclosure</span>
+                <span class="rv-acc__sub">Required financial disclosures · FL-140, FL-141</span>
+                <span class="rv-acc__verified rv-acc__verified--stack">
+                  <span><i class="fa-solid fa-circle-check"></i> FL-140 · Rev. Apr 21, 2026</span>
+                  <span><i class="fa-solid fa-circle-check"></i> FL-141 · Rev. Apr 21, 2026</span>
+                </span>
+              </div>
+            </div>
+            <i class="fa-solid fa-angle-down rv-acc__chevron"></i>
+          </div>
+          <div class="rv-acc__body">
+
+            <!-- Sub-form FL-140 -->
+            <div class="rv-subgroup">
+              <span class="rv-subgroup__label">FL-140<span class="rv-subgroup__sub">Schedule of Assets and Debts</span></span>
+              <div class="rv-thumb" data-form="fl140" data-page="1" onclick="scrollToPage('fl140',1)">
+                <div class="rv-thumb__wrap">
+                  <img class="rv-thumb__img" src="https://www.figma.com/api/mcp/asset/617e4115-6c0b-4f51-bcb1-562275d9ea07" alt="FL-140 page 1" />
+                </div>
+                <span class="rv-thumb__num">1</span>
+              </div>
+              <div class="rv-thumb" data-form="fl140" data-page="2" onclick="scrollToPage('fl140',2)">
+                <div class="rv-thumb__wrap">
+                  <img class="rv-thumb__img" src="https://www.figma.com/api/mcp/asset/cb46baf0-e046-455f-9ec6-e681ca0f47db" alt="FL-140 page 2" />
+                </div>
+                <span class="rv-thumb__num">2</span>
+              </div>
+            </div>
+
+            <!-- Sub-form FL-141 -->
+            <div class="rv-subgroup">
+              <span class="rv-subgroup__label">FL-141<span class="rv-subgroup__sub">Declaration Regarding Service of Disclosure</span></span>
+              <div class="rv-thumb" data-form="fl141" data-page="1" onclick="scrollToPage('fl141',1)">
+                <div class="rv-thumb__wrap">
+                  <img class="rv-thumb__img" src="https://www.figma.com/api/mcp/asset/650e7fcb-021f-4a54-a327-02ebd6055b13" alt="FL-141 page 1" />
+                </div>
+                <span class="rv-thumb__num">1</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <div class="rv-main">
+
+      <div class="rv-doc-header">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <button class="rv-panel-toggle" onclick="toggleLeft()" title="Toggle panel">
+            <i class="fa-solid fa-sidebar"></i>
+          </button>
+          <div class="rv-countdown" id="rv-countdown">
+            <i class="fa-solid fa-calendar-clock"></i>
+            <span id="rv-countdown-text"></span>
+            <span class="rv-countdown__detail" id="rv-countdown-detail"></span>
+          </div>
+        </div>
+        <button class="de-btn de-btn--primary">Approve</button>
+      </div>
+
+      <div class="rv-body">
+
+    <!-- CENTER: continuous scroll viewer -->
+    <main class="rv-center">
+
+      <div class="rv-viewer" id="rv-viewer">
+        <div class="rv-scroll-container" id="rv-scroll-container">
+
+          <!-- FL-100 -->
+          <div class="rv-form-label">FL-100 · Petition for Dissolution<span class="rv-form-desc">Marriage / Domestic Partnership</span></div>
+          <div class="rv-page-section" data-form="fl100" data-page="1">
+            <div class="rv-doc-wrap">
+              <img class="rv-doc-img" src="https://www.figma.com/api/mcp/asset/cb46baf0-e046-455f-9ec6-e681ca0f47db" alt="FL-100 — Page 1" />
+              <!-- Overlay inputs — coordinates pixel-scanned from 1334×1728 PNG -->
+              <!-- State Bar Number  y=100-119 x=672-857 -->
+              <input class="rv-overlay-field" id="ov-bar"     data-sync="rp-bar"
+                     style="top:5.79%;  height:1.10%; left:50.4%; width:calc(13.9% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Name              y=125-144 x=125-858 -->
+              <input class="rv-overlay-field" id="ov-name"    data-sync="rp-name"
+                     style="top:7.23%;  height:1.10%; left:9.4%;  width:calc(54.9% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Firm Name         y=151-169 x=158-859 -->
+              <input class="rv-overlay-field" id="ov-firm"    data-sync="rp-firm"
+                     style="top:8.74%;  height:1.04%; left:11.8%; width:calc(52.5% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Street Address    y=175-194 x=204-859 -->
+              <input class="rv-overlay-field" id="ov-street"  data-sync="rp-street"
+                     style="top:10.13%; height:1.10%; left:15.3%; width:calc(49.1% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- City              y=200-219 x=117-523 -->
+              <input class="rv-overlay-field" id="ov-city"    data-sync="rp-city"
+                     style="top:11.57%; height:1.10%; left:8.8%;  width:calc(30.4% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- State             y=200-219 x=577-640 -->
+              <input class="rv-overlay-field" id="ov-state"   data-sync="rp-state"
+                     style="top:11.57%; height:1.10%; left:43.3%; width:calc(4.7% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Zip Code          y=200-219 x=712-859 -->
+              <input class="rv-overlay-field" id="ov-zip"     data-sync="rp-zip"
+                     style="top:11.57%; height:1.10%; left:53.4%; width:calc(11.0% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Telephone No.     y=225-244 x=193-472 -->
+              <input class="rv-overlay-field" id="ov-tel"     data-sync="rp-tel"
+                     style="top:13.02%; height:1.10%; left:14.5%; width:calc(20.9% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Fax No.           y=225-244 x=579-859 -->
+              <input class="rv-overlay-field" id="ov-fax"     data-sync="rp-fax"
+                     style="top:13.02%; height:1.10%; left:43.4%; width:calc(21.0% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- E-Mail Address    y=252-270 x=197-859 -->
+              <input class="rv-overlay-field" id="ov-email"   data-sync="rp-email"
+                     style="top:14.58%; height:1.04%; left:14.8%; width:calc(49.6% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Mailing Address   y=277-295 x=235-859 -->
+              <input class="rv-overlay-field" id="ov-mailing" data-sync="rp-mailing"
+                     style="top:16.03%; height:1.04%; left:17.6%; width:calc(46.8% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+
+              <!-- ── COURT INFO ──────────────────────────────────────────── -->
+              <!-- County  fill x=501-852, y=311-332 → right half of header row -->
+              <input class="rv-overlay-field" id="ov-county"       data-sync="rp-county"
+                     style="top:18.00%; height:1.27%; left:37.6%; width:calc(26.3% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Court Street Address fill x=242-852, y=349-362 -->
+              <input class="rv-overlay-field" id="ov-court-street" data-sync="rp-court-street"
+                     style="top:19.50%; height:0.75%; left:18.1%; width:calc(45.8% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Court Mailing Addr   fill x=242-852, y=371-384 -->
+              <input class="rv-overlay-field" id="ov-court-mail"   data-sync="rp-court-mail"
+                     style="top:20.89%; height:0.75%; left:18.1%; width:calc(45.8% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Court City / Zip     fill x=242-852, y=393-407 -->
+              <input class="rv-overlay-field" id="ov-court-city"   data-sync="rp-court-city"
+                     style="top:22.16%; height:0.81%; left:18.1%; width:calc(45.8% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Branch Name          fill x=242-852, y=416-422 → centered -->
+              <input class="rv-overlay-field" id="ov-branch"       data-sync="rp-branch"
+                     style="top:23.45%; height:0.69%; left:18.1%; width:calc(45.8% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+
+              <!-- ── PETITIONER / RESPONDENT (band 10, x=16.2%–64.2%) ── -->
+              <!-- Petitioner           y=453-461 -->
+              <input class="rv-overlay-field" id="ov-petitioner"   data-sync="rp-petitioner"
+                     style="top:25.52%; height:0.75%; left:16.2%; width:calc(48.0% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Respondent           y=475-484 -->
+              <input class="rv-overlay-field" id="ov-respondent"   data-sync="rp-respondent"
+                     style="top:26.80%; height:0.75%; left:16.2%; width:calc(48.0% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+
+              <!-- ── CASE NUMBER (band 12, right side) ─────────────────── -->
+              <!-- Case Number          y=521-545 x=877-1205 -->
+              <input class="rv-overlay-field" id="ov-case"         data-sync="rp-case"
+                     style="top:30.15%; height:1.39%; left:65.7%; width:calc(24.6% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+
+              <!-- ── STATISTICAL FACTS (band 21) ───────────────────────── -->
+              <!-- Date of Marriage     y=952-971 x=432-707 -->
+              <input class="rv-overlay-field" id="ov-date-marr"    data-sync="rp-date-marr"
+                     style="top:55.09%; height:1.10%; left:32.4%; width:calc(20.7% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+              <!-- Date of Separation   y=952-971 x=978-1253 -->
+              <input class="rv-overlay-field" id="ov-date-sep"     data-sync="rp-date-sep"
+                     style="top:55.09%; height:1.10%; left:73.3%; width:calc(20.7% - 4px);"
+                     type="text" autocomplete="off" spellcheck="false" />
+            </div>
+          </div>
+          <div class="rv-page-section" data-form="fl100" data-page="2">
+            <img class="rv-doc-img" src="https://www.figma.com/api/mcp/asset/650e7fcb-021f-4a54-a327-02ebd6055b13" alt="FL-100 — Page 2" />
+          </div>
+          <div class="rv-page-section" data-form="fl100" data-page="3">
+            <img class="rv-doc-img" src="https://www.figma.com/api/mcp/asset/617e4115-6c0b-4f51-bcb1-562275d9ea07" alt="FL-100 — Page 3" />
+          </div>
+
+          <!-- FL-101 -->
+          <div class="rv-form-label">FL-101 · Summons<span class="rv-form-desc">Family Law</span></div>
+          <div class="rv-page-section" data-form="fl101" data-page="1">
+            <img class="rv-doc-img" src="https://www.figma.com/api/mcp/asset/cb46baf0-e046-455f-9ec6-e681ca0f47db" alt="FL-101 — Page 1" />
+          </div>
+
+          <!-- Declaration of Disclosure -->
+          <div class="rv-form-label">Declaration of Disclosure<span class="rv-form-desc">Required financial disclosures · FL-140, FL-141</span></div>
+
+          <div class="rv-subform-label">FL-140 <span class="rv-subform-desc">Schedule of Assets and Debts</span></div>
+          <div class="rv-page-section" data-form="fl140" data-page="1">
+            <img class="rv-doc-img" src="https://www.figma.com/api/mcp/asset/617e4115-6c0b-4f51-bcb1-562275d9ea07" alt="FL-140 — Page 1" />
+          </div>
+          <div class="rv-page-section" data-form="fl140" data-page="2">
+            <img class="rv-doc-img" src="https://www.figma.com/api/mcp/asset/cb46baf0-e046-455f-9ec6-e681ca0f47db" alt="FL-140 — Page 2" />
+          </div>
+
+          <div class="rv-subform-label">FL-141 <span class="rv-subform-desc">Declaration Regarding Service of Disclosure</span></div>
+          <div class="rv-page-section" data-form="fl141" data-page="1">
+            <img class="rv-doc-img" src="https://www.figma.com/api/mcp/asset/650e7fcb-021f-4a54-a327-02ebd6055b13" alt="FL-141 — Page 1" />
+          </div>
+
+        </div>
+      </div>
+
+      <div class="rv-resize">
+        <div class="rv-resize__main">
+          <button class="rv-resize__btn" onclick="zoomOut()" title="Zoom out">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <input type="range" id="rv-zoom-slider" min="25" max="500" value="100" step="5" />
+          <button class="rv-resize__btn" onclick="zoomIn()" title="Zoom in">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <button class="rv-resize__btn" onclick="fitToWidth()" title="Fit to width" style="margin-left:4px;">
+            <i class="fa-solid fa-compress"></i>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT: quick fill panel -->
+    <aside class="rv-right" id="rv-right">
+
+      <div class="rv-right__header">
+        <div style="margin-bottom: 6px;">
+          <div class="rv-matter__title-row">
+            <span class="rv-matter__name">Bond v. Silva</span>
+          </div>
+          <div class="rv-matter__table">
+            <div class="rv-matter__col">
+              <span class="rv-matter__label">Matter Number</span>
+              <span class="rv-matter__label">Client Name</span>
+              <span class="rv-matter__label">Court/Jurisdiction Name</span>
+            </div>
+            <div class="rv-matter__col">
+              <span class="rv-matter__value">5873</span>
+              <span class="rv-matter__value">James Bond</span>
+              <span class="rv-matter__value rv-matter__value--wrap">Los Angeles Superior Court</span>
+            </div>
+          </div>
+        </div>
+        <div class="de-field de-field--icon">
+          <input class="de-field__input" type="text" placeholder=" " id="rp-search" />
+          <label class="de-field__label">Search</label>
+          <i class="de-field__icon fa-solid fa-magnifying-glass"></i>
+        </div>
+        <div class="rv-filter-dropdown" id="rv-filter-dropdown">
+          <button class="rv-filter-trigger" id="rv-filter-trigger">
+            <span id="rv-filter-trigger-label">All fields</span>
+            <i class="fa-solid fa-chevron-down rv-filter-trigger__chevron"></i>
+          </button>
+          <div class="rv-filter-menu" id="rv-filter-menu">
+            <button class="rv-filter-option is-selected" data-filter="all">
+              All fields
+              <i class="fa-solid fa-check rv-filter-check"></i>
+            </button>
+            <button class="rv-filter-option" data-filter="cms">
+              <i class="fa-solid fa-database rv-filter-option__icon rv-filter-option__icon--cms"></i>
+              Matter data
+              <i class="fa-solid fa-check rv-filter-check"></i>
+            </button>
+            <button class="rv-filter-option" data-filter="manual">
+              <i class="fa-solid fa-pen-to-square rv-filter-option__icon rv-filter-option__icon--manual"></i>
+              Edited
+              <i class="fa-solid fa-check rv-filter-check"></i>
+            </button>
+            <button class="rv-filter-option" data-filter="empty">
+              <i class="fa-regular fa-circle rv-filter-option__icon rv-filter-option__icon--empty"></i>
+              Empty
+              <i class="fa-solid fa-check rv-filter-check"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="rv-right__scroll">
+        <div class="rv-missing-banner" id="rv-missing-banner" role="button" tabindex="0">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span class="rv-missing-banner__text"><span id="rv-missing-count">1</span> required field is empty</span>
+          <span class="rv-missing-banner__cta" id="rv-missing-cta">Review <i class="fa-solid fa-arrow-right"></i></span>
+        </div>
+<div class="rv-fields">
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-bar"          type="text" value="287532" placeholder=" " />
+          <label class="de-field__label">State Bar Number</label>
+        </div>
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-name"         type="text" value="James Bond" placeholder=" " />
+          <label class="de-field__label">Name</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-firm"         type="text" value="Kirkland Legal" placeholder=" " />
+          <label class="de-field__label">Firm Name</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-street"       type="text" value="333 S Hope St, Suite 2800" placeholder=" " />
+          <label class="de-field__label">Street Address</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-city"         type="text" value="Los Angeles" placeholder=" " />
+          <label class="de-field__label">City</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-state"        type="text" value="CA" placeholder=" " />
+          <label class="de-field__label">State</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-zip"          type="text" value="90071" placeholder=" " />
+          <label class="de-field__label">Zip Code</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-tel"          type="text" value="(213) 555-3343" placeholder=" " />
+          <label class="de-field__label">Telephone No.</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-fax"          type="text" value="" placeholder=" " />
+          <label class="de-field__label">Fax No.</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-email"        type="text" value="jsmith@kirklandlegal.com" placeholder=" " />
+          <label class="de-field__label">E-Mail Address</label>
+        </div>
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-mailing"      type="text" value="" placeholder="e.g. Petitioner" />
+          <label class="de-field__label">Attorney for (name)</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-county"       type="text" value="Los Angeles" placeholder=" " />
+          <label class="de-field__label">County</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-court-street" type="text" value="111 N Hill St" placeholder=" " />
+          <label class="de-field__label">Court Street Address</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-court-mail"   type="text" value="P.O. Box 151" placeholder=" " />
+          <label class="de-field__label">Court Mailing Address</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-court-city"   type="text" value="Los Angeles, CA 90012" placeholder=" " />
+          <label class="de-field__label">City and Zip Code</label>
+        </div>
+        <div class="de-field">
+          <input class="de-field__input" id="rp-branch"       type="text" value="Stanley Mosk Courthouse" placeholder=" " />
+          <label class="de-field__label">Branch Name</label>
+        </div>
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-petitioner"   type="text" value="Bond, James" placeholder=" " />
+          <label class="de-field__label">Petitioner</label>
+        </div>
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-respondent"   type="text" value="Silva, Maria" placeholder=" " />
+          <label class="de-field__label">Respondent</label>
+        </div>
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-case"         type="text" value="24STFD04021" placeholder=" " />
+          <label class="de-field__label">Case Number</label>
+        </div>
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-date-marr"    type="text" value="01/15/2018" placeholder=" " />
+          <label class="de-field__label">Date of Marriage</label>
+        </div>
+        <div class="de-field" data-required>
+          <input class="de-field__input" id="rp-date-sep"     type="text" value="06/30/2024" placeholder=" " />
+          <label class="de-field__label">Date of Separation</label>
+        </div>
+      </div>
+      </div><!-- /.rv-right__scroll -->
+
+    </aside>
+
+      </div><!-- /.rv-body -->
+    </div><!-- /.rv-main -->
+
+  </div>
+
+  <script>
+    /* ── Filing deadline countdown ── */
+    (function () {
+      var DEADLINE = new Date('2026-04-25T17:00:00');
+      var textEl   = document.getElementById('rv-countdown-text');
+      var detailEl = document.getElementById('rv-countdown-detail');
+
+      function update() {
+        var diff = DEADLINE - Date.now();
+        if (diff <= 0) { textEl.textContent = 'Deadline passed'; return; }
+        var days  = Math.floor(diff / 86400000);
+        var hours = Math.floor((diff % 86400000) / 3600000);
+        var mins  = Math.floor((diff % 3600000)  / 60000);
+        var parts = [];
+        if (days)  parts.push(days  + 'd');
+        if (hours) parts.push(hours + 'h');
+        parts.push(mins + 'm');
+        textEl.textContent  = parts.join(' ') + ' left to file';
+        detailEl.textContent = '· Apr 25, 2026 at 5:00 PM PDT';
+      }
+
+      update();
+      setInterval(update, 60000);
+    })();
+
+    /* ── Required fields — live missing count + jump-to-field ── */
+    (function () {
+      var requiredFields = Array.prototype.slice.call(
+        document.querySelectorAll('.de-field[data-required]')
+      );
+      var banner  = document.getElementById('rv-missing-banner');
+      var countEl = document.getElementById('rv-missing-count');
+      var scroll  = document.querySelector('.rv-right__scroll');
+
+      function refresh() {
+        var missing = 0;
+        requiredFields.forEach(function (field) {
+          var input = field.querySelector('.de-field__input');
+          var empty = !input || input.value.trim() === '';
+          field.classList.toggle('is-required-empty', empty);
+          if (empty) missing++;
+        });
+        countEl.textContent = missing;
+        if (missing === 0) { exitReview(); banner.classList.add('is-hidden'); }
+        else { banner.classList.remove('is-hidden'); }
+      }
+
+      var fieldsWrap = document.querySelector('.rv-fields');
+      var cta        = document.getElementById('rv-missing-cta');
+      var reviewing  = false;
+
+      function enterReview() {
+        reviewing = true;
+        banner.classList.add('is-reviewing');
+        fieldsWrap.classList.add('is-filter-mode');
+        cta.innerHTML = 'Show all <i class="fa-solid fa-xmark"></i>';
+        scroll.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function exitReview() {
+        reviewing = false;
+        banner.classList.remove('is-reviewing');
+        fieldsWrap.classList.remove('is-filter-mode');
+        cta.innerHTML = 'Review <i class="fa-solid fa-arrow-right"></i>';
+      }
+
+      function toggle() { reviewing ? exitReview() : enterReview(); }
+
+      banner.addEventListener('click', toggle);
+      banner.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') toggle(); });
+
+      requiredFields.forEach(function (field) {
+        var input = field.querySelector('.de-field__input');
+        if (input) input.addEventListener('input', refresh);
+      });
+
+      refresh();
+    })();
+
+    /* ── Bidirectional overlay ↔ right-panel sync ── */
+    (function () {
+      var rvRight  = document.querySelector('.rv-right__scroll');
+      var rvViewer = document.getElementById('rv-viewer');
+
+      /* Scroll right panel so `el` appears vertically centred */
+      function scrollToCenter(container, el) {
+        var cRect  = container.getBoundingClientRect();
+        var eRect  = el.getBoundingClientRect();
+        var elMid  = eRect.top - cRect.top + container.scrollTop + eRect.height / 2;
+        container.scrollTo({ top: elMid - container.clientHeight / 2, behavior: 'smooth' });
+      }
+
+      /* Pan the canvas so `el` appears vertically centred in the viewer */
+      function panToEl(el) {
+        var vRect = rvViewer.getBoundingClientRect();
+        var eRect = el.getBoundingClientRect();
+        var elCY  = eRect.top + eRect.height / 2 - vRect.top;
+        panY += rvViewer.clientHeight / 2 - elCY;
+        applyTransform();
+      }
+
+      document.querySelectorAll('.rv-overlay-field[data-sync]').forEach(function (ov) {
+        var rp = document.getElementById(ov.dataset.sync);
+        if (!rp) return;
+        var rpField = rp.closest('.de-field');
+
+        ov.value = rp.value;
+
+        /* Value sync */
+        ov.addEventListener('input', function () {
+          if (rp.value !== ov.value) { rp.value = ov.value; rp.dispatchEvent(new Event('input')); }
+        });
+        rp.addEventListener('input', function () {
+          if (ov.value !== rp.value) ov.value = rp.value;
+        });
+
+        /* Highlight + scroll: overlay focused → highlight & centre rp field in right panel */
+        ov.addEventListener('focus', function () {
+          if (rpField) {
+            rpField.classList.add('is-synced-active');
+            scrollToCenter(rvRight, rpField);
+          }
+        });
+        ov.addEventListener('blur', function () { if (rpField) rpField.classList.remove('is-synced-active'); });
+
+        /* Highlight + scroll: rp field focused → highlight & centre overlay in viewer */
+        rp.addEventListener('focus', function () {
+          ov.classList.add('is-synced-active');
+          panToEl(ov);
+        });
+        rp.addEventListener('blur', function () { ov.classList.remove('is-synced-active'); });
+      });
+    })();
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.dataset.theme === 'dark';
+      html.dataset.theme = isDark ? 'light' : 'dark';
+      document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun-bright';
+    }
+
+    function toggleLeft() {
+      document.getElementById('rv-left').classList.toggle('is-collapsed');
+    }
+
+    function toggleAcc(header) {
+      const acc = header.closest('.rv-acc');
+      const isExpanded = acc.classList.contains('is-expanded');
+
+      // Collapse all accordions first
+      document.querySelectorAll('.rv-acc').forEach(function(a) {
+        a.classList.remove('is-expanded');
+        a.classList.add('rv-acc--muted');
+        const ch = a.querySelector('.rv-acc__chevron');
+        if (ch) ch.classList.replace('fa-angle-up', 'fa-angle-down');
+      });
+
+      // Open the clicked one only if it wasn't already open
+      if (!isExpanded) {
+        acc.classList.add('is-expanded');
+        acc.classList.remove('rv-acc--muted');
+        const ch = acc.querySelector('.rv-acc__chevron');
+        if (ch) ch.classList.replace('fa-angle-down', 'fa-angle-up');
+      }
+    }
+
+    function scrollToPage(formId, pageNum) {
+      const section = document.querySelector(
+        '.rv-page-section[data-form="' + formId + '"][data-page="' + pageNum + '"]'
+      );
+      if (!section) return;
+      panY = 40 - section.offsetTop * zoom;
+      applyTransform();
+    }
+
+    /* Map individual form IDs to their parent accordion */
+    const formToAccordion = {
+      fl100: 'fl100',
+      fl101: 'fl101',
+      fl140: 'marriage',
+      fl141: 'marriage',
+    };
+
+    let activeForm = 'fl100';
+    let activePage = 1;
+
+    function setActive(formId, pageNum) {
+      if (formId === activeForm && pageNum === activePage) return;
+
+      const newAccId = formToAccordion[formId];
+      const oldAccId = formToAccordion[activeForm];
+
+      if (newAccId !== oldAccId) {
+        const oldAcc = document.getElementById('acc-' + oldAccId);
+        if (oldAcc) {
+          oldAcc.classList.remove('is-expanded');
+          oldAcc.classList.add('rv-acc--muted');
+          const ch = oldAcc.querySelector('.rv-acc__chevron');
+          if (ch) ch.classList.replace('fa-angle-up', 'fa-angle-down');
+        }
+        const newAcc = document.getElementById('acc-' + newAccId);
+        if (newAcc) {
+          newAcc.classList.add('is-expanded');
+          newAcc.classList.remove('rv-acc--muted');
+          const ch = newAcc.querySelector('.rv-acc__chevron');
+          if (ch) ch.classList.replace('fa-angle-down', 'fa-angle-up');
+          newAcc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+
+      activeForm = formId;
+      activePage = pageNum;
+
+      document.querySelectorAll('.rv-thumb').forEach(function(t) { t.classList.remove('is-active'); });
+      const thumb = document.querySelector(
+        '.rv-thumb[data-form="' + formId + '"][data-page="' + pageNum + '"]'
+      );
+      if (thumb) {
+        thumb.classList.add('is-active');
+        thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // ── INFINITE CANVAS ─────────────────────────────────────────────────────
+    const viewer       = document.getElementById('rv-viewer');
+    const canvas       = document.getElementById('rv-scroll-container');
+    const slider       = document.getElementById('rv-zoom-slider');
+    const pageSections = document.querySelectorAll('.rv-page-section');
+
+    const BASE_WIDTH = 667;
+    const MIN_ZOOM   = 0.25;
+    const MAX_ZOOM   = 5;
+
+    let zoom = 1, panX = 0, panY = 40;
+    let isDragging = false, dragX = 0, dragY = 0;
+
+    // Keep doc anchored — Preview-style bounded panning
+    const EDGE_MARGIN = 80; // min px of doc always kept inside viewport
+
+    function clampPan() {
+      const vw   = viewer.clientWidth;
+      const vh   = viewer.clientHeight;
+      const docW = BASE_WIDTH * zoom;
+      const docH = canvas.offsetHeight * zoom;
+
+      // Horizontal: centre when fits, bounded scroll when wider
+      if (docW <= vw) {
+        panX = (vw - docW) / 2;
+      } else {
+        panX = Math.min(EDGE_MARGIN, Math.max(vw - docW - EDGE_MARGIN, panX));
+      }
+
+      // Vertical: top-pad when fits, bounded scroll when taller
+      if (docH + 40 <= vh) {
+        panY = (vh - docH) / 2;
+      } else {
+        panY = Math.min(40, Math.max(vh - docH - EDGE_MARGIN, panY));
+      }
+    }
+
+    function applyTransform() {
+      clampPan();
+      canvas.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
+      slider.value = Math.round(zoom * 100);
+      detectActivePage();
+    }
+
+    function initCanvas() {
+      panX = (viewer.clientWidth - BASE_WIDTH) / 2;
+      panY = 40;
+      applyTransform();
+    }
+
+    function setZoom(pct, cx, cy) {
+      exitFitMode();
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, parseFloat(pct) / 100));
+      const ox = cx !== undefined ? cx : viewer.clientWidth  / 2;
+      const oy = cy !== undefined ? cy : viewer.clientHeight / 2;
+      const s  = newZoom / zoom;
+      panX = ox - (ox - panX) * s;
+      panY = oy - (oy - panY) * s;
+      zoom = newZoom;
+      applyTransform();
+    }
+
+    function zoomIn()  { setZoom(Math.round(zoom * 100) + 15); }
+    function zoomOut() { setZoom(Math.round(zoom * 100) - 15); }
+
+    let isFitMode = false;
+    const fitBtn = document.querySelector('[onclick="fitToWidth()"]');
+
+    const FIT_PADDING = 32; // px gap each side in fit mode
+
+    function applyFit() {
+      zoom = (viewer.clientWidth - FIT_PADDING * 2) / BASE_WIDTH;
+      panX = FIT_PADDING;
+      panY = 40;
+      applyTransform();
+    }
+
+    function fitToWidth() {
+      isFitMode = !isFitMode;
+      fitBtn.classList.toggle('is-active', isFitMode);
+      if (isFitMode) applyFit();
+    }
+
+    function exitFitMode() {
+      if (!isFitMode) return;
+      isFitMode = false;
+      fitBtn.classList.remove('is-active');
+    }
+
+    new ResizeObserver(function() {
+      if (isFitMode) applyFit();
+    }).observe(viewer);
+
+    requestAnimationFrame(function() { applyFit(); });
+
+    function detectActivePage() {
+      const triggerY = viewer.clientHeight * 0.3;
+      let hit = null;
+      for (let i = 0; i < pageSections.length; i++) {
+        if (panY + pageSections[i].offsetTop * zoom <= triggerY) hit = pageSections[i];
+      }
+      if (hit) setActive(hit.dataset.form, parseInt(hit.dataset.page));
+    }
+
+    // Pinch-to-zoom + two-finger scroll (trackpad)
+    viewer.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      const rect = viewer.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      if (e.ctrlKey) {
+        // two-finger pinch
+        setZoom((zoom - e.deltaY * zoom * 0.01) * 100, cx, cy);
+      } else {
+        panX -= e.deltaX;
+        panY -= e.deltaY;
+        applyTransform();
+      }
+    }, { passive: false });
+
+    // Drag to pan
+    viewer.addEventListener('mousedown', function(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+      exitFitMode();
+      isDragging = true;
+      dragX = e.clientX; dragY = e.clientY;
+      viewer.classList.add('is-dragging');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!isDragging) return;
+      panX += e.clientX - dragX;
+      panY += e.clientY - dragY;
+      dragX = e.clientX; dragY = e.clientY;
+      applyTransform();
+    });
+    window.addEventListener('mouseup', function() {
+      if (!isDragging) return;
+      isDragging = false;
+      viewer.classList.remove('is-dragging');
+    });
+
+    // Slider
+    slider.addEventListener('input', function() { setZoom(this.value); });
+
+    // Keyboard
+    document.addEventListener('keydown', function(e) {
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+      if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomIn(); }
+      if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomOut(); }
+      if (e.key === '0') { e.preventDefault(); zoom = 1; panX = (viewer.clientWidth - BASE_WIDTH) / 2; panY = 40; applyTransform(); }
+    });
+
+    initCanvas();
+
+    /* Body-level tooltip — escapes overflow:auto clipping */
+    (function() {
+      var tip = document.createElement('div');
+      tip.id = 'rv-tip';
+      document.body.appendChild(tip);
+
+      document.querySelector('.rv-right').addEventListener('mouseover', function(e) {
+        var src = e.target.closest('.de-field__src[data-tip]');
+        if (!src) return;
+        tip.textContent = src.getAttribute('data-tip');
+        var r = src.getBoundingClientRect();
+        tip.style.left = (r.left + r.width / 2) + 'px';
+        tip.style.top  = (r.top - 8) + 'px';
+        tip.style.transform = 'translateX(-50%) translateY(-100%)';
+        tip.classList.add('is-visible');
+      });
+      document.querySelector('.rv-right').addEventListener('mouseout', function(e) {
+        if (e.target.closest('.de-field__src[data-tip]')) tip.classList.remove('is-visible');
+      });
+    })();
+
+    /* Three-state field source indicators (CMS / manual / empty) */
+    (function() {
+      var cmsValues = {};
+
+      // Record original system-sourced values and wrap each field
+      document.querySelectorAll('.rv-right .rv-fields .de-field').forEach(function(field) {
+        var input = field.querySelector('.de-field__input');
+        if (!input) return;
+        cmsValues[input.id] = input.value.trim();
+
+        // Wrap field in a row container
+        var row = document.createElement('div');
+        row.className = 'rv-field-row';
+        field.parentNode.insertBefore(row, field);
+        row.appendChild(field);
+
+        // Prepend icon slot (always present for alignment)
+        var src = document.createElement('span');
+        src.className = 'de-field__src';
+        src.innerHTML =
+          '<i class="de-field__src-cms fa-solid fa-database"></i>' +
+          '<i class="de-field__src-manual fa-solid fa-pen-to-square"></i>' +
+          '<i class="de-field__src-empty fa-regular fa-circle"></i>';
+        row.insertBefore(src, field);
+      });
+
+      function updateState(input) {
+        var row = input.closest('.rv-field-row');
+        if (!row) return;
+        var src = row.querySelector('.de-field__src');
+        var val = input.value.trim();
+
+        row.classList.remove('rv-field-row--cms', 'rv-field-row--manual', 'rv-field-row--empty');
+        src.removeAttribute('data-tip');
+
+        if (!val) {
+          row.classList.add('rv-field-row--empty');
+          src.setAttribute('data-tip', 'Empty field');
+          return;
+        }
+
+        if (val === cmsValues[input.id]) {
+          row.classList.add('rv-field-row--cms');
+          src.setAttribute('data-tip', 'Synced from matter data');
+        } else {
+          row.classList.add('rv-field-row--manual');
+          src.setAttribute('data-tip', 'Edited');
+        }
+      }
+
+      document.querySelectorAll('.rv-right .rv-fields .de-field__input').forEach(function(input) {
+        updateState(input);
+        input.addEventListener('input', function() { updateState(input); });
+      });
+    })();
+
+    /* ── Right panel search ── */
+    (function() {
+      var searchInput = document.getElementById('rp-search');
+      var fields      = document.querySelector('.rv-fields');
+
+      searchInput.addEventListener('input', function() {
+        var q = searchInput.value.trim().toLowerCase();
+        fields.querySelectorAll('.rv-field-row').forEach(function(row) {
+          if (!q) { row.style.display = ''; return; }
+          var label = (row.querySelector('.de-field__label') || {}).textContent || '';
+          var value = (row.querySelector('.de-field__input') || {}).value || '';
+          var match = label.toLowerCase().includes(q) || value.toLowerCase().includes(q);
+          row.style.display = match ? '' : 'none';
+        });
+      });
+    })();
+
+    /* ── Right panel filter chip dropdown ── */
+    (function() {
+      var trigger  = document.getElementById('rv-filter-trigger');
+      var menu     = document.getElementById('rv-filter-menu');
+      var trigLbl  = document.getElementById('rv-filter-trigger-label');
+      var options  = menu.querySelectorAll('.rv-filter-option');
+      var fields   = document.querySelector('.rv-fields');
+      var active   = 'all';
+
+      var meta = {
+        all:    { label: 'All fields', icon: '' },
+        cms:    { label: 'Matter data', icon: '<i class="fa-solid fa-database" style="font-size:9px;color:#4ade80;margin-right:1px"></i>' },
+        manual: { label: 'Edited',      icon: '<i class="fa-solid fa-pen-to-square" style="font-size:9px;color:#fbbf24;margin-right:1px"></i>' },
+        empty:  { label: 'Empty',      icon: '<i class="fa-regular fa-circle" style="font-size:9px;color:rgba(148,163,184,0.65);margin-right:1px"></i>' }
+      };
+
+      function applyFilter() {
+        fields.querySelectorAll('.rv-field-row').forEach(function(row) {
+          var isCms    = row.classList.contains('rv-field-row--cms');
+          var isManual = row.classList.contains('rv-field-row--manual');
+          var show = active === 'all'
+            || (active === 'cms'    && isCms)
+            || (active === 'manual' && isManual)
+            || (active === 'empty'  && !isCms && !isManual);
+          row.style.display = show ? '' : 'none';
+        });
+      }
+
+      function select(filter) {
+        active = filter;
+        options.forEach(function(o) { o.classList.toggle('is-selected', o.dataset.filter === filter); });
+        trigLbl.textContent = meta[filter].label;
+        closeMenu();
+        applyFilter();
+      }
+
+      function openMenu()  { menu.classList.add('is-open');    trigger.classList.add('is-open'); }
+      function closeMenu() { menu.classList.remove('is-open'); trigger.classList.remove('is-open'); }
+
+      trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menu.classList.contains('is-open') ? closeMenu() : openMenu();
+      });
+
+      options.forEach(function(opt) {
+        opt.addEventListener('click', function() { select(opt.dataset.filter); });
+      });
+
+      document.getElementById('rv-filter-dropdown').addEventListener('click', function(e) {
+        if (!e.target.closest('#rv-filter-menu') && !e.target.closest('#rv-filter-trigger')) closeMenu();
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!document.getElementById('rv-filter-dropdown').contains(e.target)) closeMenu();
+      });
+    })();
+  </script>
+</body>
+</html>
